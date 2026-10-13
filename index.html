@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b1524">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kizuna">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%23c8402f'/%3E%3Ctext x='50' y='66' font-size='70' font-weight='900' text-anchor='middle' fill='%23fbeee6' font-family='serif'%3E絆%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%23c8402f'/%3E%3Ctext x='50' y='66' font-size='70' font-weight='900' text-anchor='middle' fill='%23fbeee6' font-family='serif'%3E絆%3C/text%3E%3C/svg%3E">
+<title>Kizuna 絆 — le journal des animés, films et mangas</title>
+<style>
+:root{
+  --ai-900:#0b1524;      /* indigo très profond */
+  --ai-800:#0f1d31;
+  --ai-700:#16294a;
+  --ai-600:#1f3a63;
+  --ai-500:#37577f;
+  --washi:#ece4d4;       /* papier washi */
+  --washi-dim:#a9b1bd;
+  --hanko:#c8402f;       /* cachet rouge */
+  --kinpaku:#dcb15a;     /* feuille d'or */
+  --asagi:#6fb3c4;       /* bleu-vert clair */
+  --line:rgba(236,228,212,.14);
+  --serif:"Yu Mincho","Hiragino Mincho ProN","Noto Serif JP","Songti SC","Times New Roman",serif;
+  --sans:"Hiragino Sans","Yu Gothic","Noto Sans JP","Segoe UI",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--ai-900);color:var(--washi);font-family:var(--sans);font-size:15px;line-height:1.55;min-height:100vh;
+  background-image:
+   radial-gradient(circle at 50% 100%,transparent 0 30%,rgba(111,179,196,.07) 31% 33%,transparent 34% 46%,rgba(111,179,196,.05) 47% 49%,transparent 50%),
+   linear-gradient(180deg,var(--ai-800),var(--ai-900) 420px);
+  background-size:72px 36px,100% 100%;background-repeat:repeat-x,no-repeat;background-position:0 0,0 0}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;padding:0}
+input,select,textarea{font:inherit;color:var(--washi);background:var(--ai-800);border:1px solid var(--line);border-radius:3px;padding:.55em .8em}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--kinpaku);outline-offset:2px}
+::placeholder{color:#7d8ba0}
+h1,h2,h3{font-family:var(--serif);font-weight:700;margin:0}
+
+/* ───── En-tête ───── */
+.top{display:flex;align-items:center;gap:18px;padding:18px clamp(14px,4vw,40px) 0;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:14px}
+.hanko{width:46px;height:46px;background:var(--hanko);color:#fbeee6;font-family:var(--serif);font-weight:900;font-size:32px;line-height:1;display:grid;place-items:center;border-radius:5px;transform:rotate(-4deg);box-shadow:inset 0 0 0 2px rgba(255,255,255,.22);letter-spacing:-.04em}
+.brand h1{font-size:30px;letter-spacing:.06em;line-height:1}
+.brand small{display:block;color:var(--washi-dim);font-size:12.5px;margin-top:4px}
+nav{display:flex;gap:2px;margin-left:auto;overflow-x:auto;max-width:100%;padding-bottom:2px}
+nav button{display:flex;flex-direction:column;align-items:center;padding:8px 14px 9px;border-bottom:3px solid transparent;color:var(--washi-dim);white-space:nowrap;transition:color .15s,border-color .15s}
+nav button i{font-style:normal;font-family:var(--serif);font-size:15px;color:var(--asagi);opacity:.85}
+nav button span{font-size:13.5px}
+nav button:hover{color:var(--washi)}
+nav button.on{color:var(--washi);border-color:var(--hanko)}
+nav button.on i{color:var(--kinpaku)}
+
+main{padding:22px clamp(14px,4vw,40px) 70px;max-width:1280px;margin:0 auto}
+
+/* ───── Barre d'outils ───── */
+.head{display:flex;gap:20px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px;border-bottom:1px solid var(--line);padding-bottom:14px}
+.vert{writing-mode:vertical-rl;font-family:var(--serif);font-size:34px;color:var(--hanko);letter-spacing:.12em;line-height:1;height:4.6em;white-space:nowrap;margin-right:2px}
+.head h2{font-size:28px}
+.head p{margin:2px 0 0;color:var(--washi-dim);max-width:52ch}
+.tabs{display:flex;gap:6px;margin-left:auto}
+.tabs button{padding:7px 14px;border:1px solid var(--line);border-radius:999px;color:var(--washi-dim)}
+.tabs button.on{background:var(--washi);color:var(--ai-900);border-color:var(--washi);font-weight:600}
+.search{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.search input[type=search]{flex:1 1 280px;font-size:16px;padding:.75em 1em;border-radius:999px}
+.btn{padding:.6em 1.2em;border-radius:999px;background:var(--hanko);color:#fff4ee;font-weight:600;transition:filter .15s}
+.btn:hover{filter:brightness(1.12)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--washi)}
+.btn.ghost:hover{border-color:var(--washi-dim)}
+.btn.sm{padding:.35em .9em;font-size:13px}
+.sources{display:flex;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--washi-dim);margin-bottom:16px;min-height:22px}
+.sources span{padding:2px 10px;border-radius:999px;border:1px solid var(--line)}
+.sources .ok{border-color:rgba(111,179,196,.5);color:var(--asagi)}
+.sources .ko{border-color:rgba(200,64,47,.55);color:#e89083}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:5px 12px;border:1px solid var(--line);border-radius:999px;color:var(--washi-dim);font-size:13.5px}
+.chip.on{background:var(--ai-600);color:var(--washi);border-color:var(--ai-500)}
+.filters{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.filters select,.filters input{padding:.4em .7em}
+
+/* ───── Grille d'affiches ───── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:18px 14px}
+.card{display:block;text-align:left;width:100%}
+.poster{position:relative;aspect-ratio:2/3;border-radius:3px;overflow:hidden;background:linear-gradient(160deg,var(--c,var(--ai-600)),var(--ai-800));border:1px solid var(--line);transition:transform .18s,border-color .18s}
+.card:hover .poster{transform:translateY(-3px);border-color:var(--kinpaku)}
+.poster img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+.poster .ph{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:12px;font-family:var(--serif);font-size:15px;color:var(--washi)}
+.ribbon{position:absolute;z-index:2;left:0;bottom:0;right:0;padding:18px 8px 6px;background:linear-gradient(transparent,rgba(8,14,26,.92));display:flex;justify-content:space-between;align-items:center;font-size:12px}
+.ribbon b{color:var(--kinpaku);font-weight:600}
+.ribbon .heart{color:var(--hanko);font-size:14px}
+.card .t{margin-top:7px;font-family:var(--serif);font-size:14.5px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card .m{font-size:12.5px;color:var(--washi-dim);display:flex;gap:0;flex-wrap:wrap}
+.card .m span+span::before{content:"";display:inline-block;width:1px;height:.9em;background:var(--line);margin:0 7px;vertical-align:-1px}
+.card .sc{display:flex;gap:6px;margin-top:2px;font-size:12px;color:var(--asagi)}
+
+/* ───── Étoiles ───── */
+.stars{display:inline-flex;font-size:15px;line-height:1;letter-spacing:1px}
+.stars.lg{font-size:34px;letter-spacing:3px}
+.star{position:relative;background:linear-gradient(90deg,var(--kinpaku) var(--f),#3a4a63 var(--f));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+.stars.edit .star i{position:absolute;top:0;bottom:0;width:50%;cursor:pointer}
+.stars.edit .star i.l{left:0}.stars.edit .star i.r{right:0}
+
+/* ───── Fiche détail ───── */
+.veil{position:fixed;inset:0;background:rgba(5,9,17,.8);backdrop-filter:blur(3px);z-index:50;overflow-y:auto;padding:4vh 12px}
+.sheet{max-width:880px;margin:0 auto;background:var(--ai-800);border:1px solid var(--line);border-radius:6px;overflow:hidden;position:relative}
+.sheet .ban{height:170px;background:linear-gradient(160deg,var(--c,var(--ai-600)),var(--ai-700));background-size:cover;background-position:center 30%;position:relative}
+.sheet .ban::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 20%,var(--ai-800))}
+.x{position:absolute;top:10px;right:12px;z-index:3;width:36px;height:36px;border-radius:50%;background:rgba(8,14,26,.75);font-size:20px;line-height:1}
+.body{display:grid;grid-template-columns:200px 1fr;gap:26px;padding:0 26px 26px;margin-top:-90px;position:relative;z-index:2}
+.body .poster{border-radius:4px}
+.body h2{font-size:27px;line-height:1.2}
+.body .jp{color:var(--washi-dim);font-family:var(--serif);margin:2px 0 8px}
+.facts{display:flex;flex-wrap:wrap;margin:6px 0 10px;color:var(--washi-dim);font-size:13.5px}
+.facts span+span::before{content:"";display:inline-block;width:1px;height:.9em;background:var(--line);margin:0 9px;vertical-align:-1px}
+.genres{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.genres span{font-size:12.5px;border:1px solid var(--line);padding:2px 10px;border-radius:999px;color:var(--asagi)}
+.syn{white-space:pre-line;color:#d6d2c6;max-height:9.5em;overflow:auto;padding-right:6px}
+.langs{display:flex;gap:6px;margin:0 0 6px}
+.panel{grid-column:1/-1;border-top:1px solid var(--line);padding-top:18px;display:grid;gap:16px}
+.panel .row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.panel label{color:var(--washi-dim);font-size:13.5px;min-width:76px}
+.panel textarea{width:100%;min-height:96px;resize:vertical}
+.heartbtn{font-size:30px;color:#3a4a63;transition:color .15s,transform .15s}
+.heartbtn.on{color:var(--hanko);transform:scale(1.08)}
+.prog{display:flex;align-items:center;gap:8px}
+.prog input{width:84px;text-align:center}
+.prog .btn{padding:.3em .8em}
+.listrow{display:flex;gap:6px;flex-wrap:wrap}
+
+/* ───── Journal ───── */
+.month{font-family:var(--serif);font-size:20px;margin:26px 0 6px;color:var(--kinpaku);text-transform:capitalize}
+.entry{display:grid;grid-template-columns:54px 56px 1fr auto;gap:14px;align-items:start;padding:12px 0;border-bottom:1px solid var(--line)}
+.entry .d{font-family:var(--serif);font-size:30px;line-height:1;text-align:center;color:var(--washi-dim)}
+.entry .poster{width:56px}
+.entry h3{font-size:17px}
+.entry p{margin:4px 0 0;color:#cdc8bc;max-width:70ch;white-space:pre-line}
+.entry .tag{font-size:12.5px;color:var(--asagi);margin-left:8px}
+
+/* ───── Listes ───── */
+.lists{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px}
+.lcard{text-align:left;border:1px solid var(--line);border-radius:4px;padding:12px;background:var(--ai-800);transition:border-color .15s}
+.lcard:hover{border-color:var(--kinpaku)}
+.mosaic{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;aspect-ratio:8/3;margin-bottom:10px}
+.mosaic div{background:var(--ai-700);background-size:cover;background-position:center;border-radius:2px}
+.lcard h3{font-size:17px}
+.lcard small{color:var(--washi-dim)}
+
+/* ───── Profil ───── */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:26px}
+.stat{border:1px solid var(--line);border-radius:4px;padding:14px 16px;background:var(--ai-800)}
+.stat b{display:block;font-family:var(--serif);font-size:32px;line-height:1.1}
+.stat span{color:var(--washi-dim);font-size:13px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:26px;margin-bottom:26px}
+.sec h3{font-size:19px;margin-bottom:12px}
+.histo{display:flex;align-items:flex-end;gap:6px;height:130px;padding-top:8px}
+.histo div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;font-size:11.5px;color:var(--washi-dim);gap:4px}
+.histo i{display:block;width:100%;background:var(--kinpaku);border-radius:2px 2px 0 0;min-height:2px}
+.bars{display:grid;gap:7px}
+.bar{display:grid;grid-template-columns:120px 1fr 28px;gap:10px;align-items:center;font-size:13.5px}
+.bar i{display:block;height:9px;background:var(--asagi);border-radius:2px}
+.setrow{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.setrow input[type=text],.setrow input[type=password]{flex:1 1 280px}
+.note{color:var(--washi-dim);font-size:13px;max-width:70ch}
+
+.empty{border:1px dashed var(--line);border-radius:6px;padding:40px 20px;text-align:center;color:var(--washi-dim)}
+.empty .vert{margin:0 auto 10px;color:var(--washi-dim);opacity:.5}
+.empty p{margin:6px auto 14px;max-width:48ch}
+.more{display:block;margin:26px auto 0}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--washi);color:var(--ai-900);padding:9px 18px;border-radius:999px;z-index:80;font-weight:600}
+footer{text-align:center;color:#6b7a91;font-size:12.5px;padding:0 14px 30px}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--kinpaku);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px;margin-right:8px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (max-width:640px){
+  .body{grid-template-columns:120px 1fr;gap:14px;padding:0 14px 18px;margin-top:-60px}
+  .sheet .ban{height:120px}
+  .body h2{font-size:21px}
+  .entry{grid-template-columns:36px 46px 1fr;}
+  .entry>:last-child{grid-column:3}
+  nav{margin-left:0;width:100%}
+  .tabs{margin-left:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<footer>Données fournies par AniList, MyAnimeList (via Jikan) et TMDB. Ta collection reste enregistrée sur cet appareil.</footer>
+
+<script>
+'use strict';
+/* ═════════ Identité (change le nom ici) ═════════ */
+const APP = { name:'Kizuna', kanji:'絆', tag:'Le journal de tes animés, films et mangas' };
+
+/* ═════════ Stockage local ═════════ */
+const KEY = 'kizuna.v1';
+let mem = null;
+const defaults = () => ({ items:{}, diary:[], lists:[], settings:{ tmdb:'', jikan:true } });
+function load(){
+  try{ const r = localStorage.getItem(KEY); if(r){ const d = JSON.parse(r); return Object.assign(defaults(), d, { settings:Object.assign(defaults().settings, d.settings||{}) }); } }catch(e){}
+  return mem || defaults();
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(DB)); }catch(e){ mem = DB; } }
+let DB = load();
+
+/* ═════════ Utilitaires ═════════ */
+function h(tag, a, ...kids){
+  const e = document.createElement(tag);
+  let val;
+  if(a) for(const k in a){
+    const v = a[k];
+    if(v==null || v===false) continue;
+    if(k==='class') e.className = v;
+    else if(k==='style') e.style.cssText = v;
+    else if(k==='value') val = v;
+    else if(k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k, v===true ? '' : v);
+  }
+  for(const c of kids.flat(3)){ if(c==null || c===false) continue; e.append(c.nodeType ? c : document.createTextNode(c)); }
+  if(val!==undefined) e.value = val;
+  return e;
+}
+const $ = s => document.querySelector(s);
+const uid = () => Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4);
+const today = () => new Date().toISOString().slice(0,10);
+const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\u3040-\u30ff\u4e00-\u9faf]/g,'');
+function toast(msg){ const t = h('div',{class:'toast'},msg); document.body.append(t); setTimeout(()=>t.remove(),2200); }
+const fmtDate = d => { try{ return new Date(d+'T12:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}); }catch(e){ return d; } };
+
+const TYPE = {
+  anime:{ label:'Animés', kanji:'アニメ', desc:'Séries, OAV et ONA' },
+  film:{ label:'Films', kanji:'映画', desc:'Longs métrages d’animation' },
+  manga:{ label:'Mangas', kanji:'漫画', desc:'Ton étagère de lectures' }
+};
+const STATUS = t => t==='manga'
+  ? [['planned','À lire'],['current','En cours'],['done','Lu'],['dropped','Abandonné']]
+  : [['planned','À voir'],['current','En cours'],['done','Vu'],['dropped','Abandonné']];
+const statusLabel = (t,s) => (STATUS(t).find(x=>x[0]===s)||[])[1] || '';
+const FORMAT_FR = { TV:'Série TV', TV_SHORT:'Série courte', MOVIE:'Film', SPECIAL:'Spécial', OVA:'OAV', ONA:'ONA', MUSIC:'Clip', MANGA:'Manga', ONE_SHOT:'One-shot', NOVEL:'Roman' };
+const STATE_FR = { FINISHED:'Terminé', RELEASING:'En cours de diffusion', NOT_YET_RELEASED:'À venir', CANCELLED:'Annulé', HIATUS:'En pause' };
+
+/* ═════════ Entrées de collection ═════════ */
+const E = k => DB.items[k];
+function ensure(meta){
+  if(!DB.items[meta.key]) DB.items[meta.key] = { meta, status:null, rating:0, liked:false, review:'', progress:0, tags:[], seen:'', added:Date.now(), upd:Date.now() };
+  else if(meta.cover || meta.synopsis) DB.items[meta.key].meta = Object.assign({}, DB.items[meta.key].meta, meta);
+  return DB.items[meta.key];
+}
+const active = e => !!(e && (e.status || e.rating || e.liked || e.review));
+function prune(key){
+  const e = DB.items[key];
+  if(e && !active(e) && !DB.lists.some(l=>l.keys.includes(key)) && !DB.diary.some(d=>d.key===key)) delete DB.items[key];
+}
+function touch(e){ e.upd = Date.now(); save(); }
+const metaOf = key => (DB.items[key]||{}).meta;
+
+/* ═════════ Sources de données ═════════ */
+const stripHtml = d => (d||'').replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]+>/g,'').trim();
+
+async function anilist(scope, q, page){
+  const fmt = scope==='film' ? 'format:MOVIE' : scope==='anime' ? 'format_not_in:[MOVIE]' : 'format_in:[MANGA,ONE_SHOT]';
+  const type = scope==='manga' ? 'MANGA' : 'ANIME';
+  const decl = q ? '$s:String,$p:Int' : '$p:Int';
+  const args = `type:${type} ${fmt} isAdult:false ${q ? 'search:$s sort:SEARCH_MATCH' : 'sort:TRENDING_DESC'}`;
+  const query = `query(${decl}){Page(page:$p,perPage:24){pageInfo{hasNextPage} media(${args}){id idMal type format status episodes chapters volumes seasonYear startDate{year} averageScore genres description(asHtml:false) bannerImage coverImage{extraLarge large color} title{romaji english native} studios(isMain:true){nodes{name}}}}}`;
+  const r = await fetch('https://graphql.anilist.co',{ method:'POST', headers:{'Content-Type':'application/json',Accept:'application/json'}, body:JSON.stringify({ query, variables: q ? {s:q,p:page} : {p:page} }) });
+  if(!r.ok) throw new Error('AniList '+r.status);
+  const j = await r.json();
+  if(j.errors) throw new Error(j.errors[0].message);
+  const P = j.data.Page;
+  return { more:P.pageInfo.hasNextPage, list:P.media.map(m=>({
+    key:'al:'+m.id, malId:m.idMal||null,
+    type: m.type==='MANGA' ? 'manga' : (m.format==='MOVIE' ? 'film' : 'anime'),
+    title: m.title.english || m.title.romaji, titleRo:m.title.romaji, titleJp:m.title.native||'',
+    cover: m.coverImage.extraLarge || m.coverImage.large || '', banner:m.bannerImage||'', color:m.coverImage.color||'',
+    year: m.seasonYear || (m.startDate&&m.startDate.year) || null,
+    format: FORMAT_FR[m.format]||m.format||'', state: STATE_FR[m.status]||'',
+    episodes:m.episodes||null, chapters:m.chapters||null, volumes:m.volumes||null,
+    genres:m.genres||[], synopsis:stripHtml(m.description),
+    studios:((m.studios&&m.studios.nodes)||[]).map(s=>s.name),
+    scoreAL:m.averageScore||null, src:['AniList']
+  })) };
+}
+
+async function jikan(scope, q){
+  const ep = scope==='manga' ? 'manga' : 'anime';
+  const extra = scope==='film' ? '&type=movie' : '';
+  const r = await fetch(`https://api.jikan.moe/v4/${ep}?q=${encodeURIComponent(q)}&limit=15&sfw=true${extra}`);
+  if(!r.ok) throw new Error('Jikan '+r.status);
+  const j = await r.json();
+  return (j.data||[]).filter(x=>scope!=='anime' || x.type!=='Movie').map(x=>({
+    key:`mal:${ep}:${x.mal_id}`, malId:x.mal_id,
+    type: scope==='manga' ? 'manga' : (x.type==='Movie' ? 'film' : 'anime'),
+    title:x.title_english || x.title, titleRo:x.title, titleJp:x.title_japanese||'',
+    cover:(x.images&&x.images.jpg&&(x.images.jpg.large_image_url||x.images.jpg.image_url))||'', banner:'', color:'',
+    year:x.year || (x.aired&&x.aired.prop&&x.aired.prop.from&&x.aired.prop.from.year) || (x.published&&x.published.prop&&x.published.prop.from&&x.published.prop.from.year) || null,
+    format:x.type||'', state:'', episodes:x.episodes||null, chapters:x.chapters||null, volumes:x.volumes||null,
+    genres:(x.genres||[]).map(g=>g.name), synopsis:(x.synopsis||'').trim(),
+    studios:(x.studios||[]).map(s=>s.name), scoreMAL:x.score||null, src:['MyAnimeList']
+  }));
+}
+
+async function tmdb(scope, q){
+  const kind = scope==='film' ? 'movie' : 'tv';
+  const k = DB.settings.tmdb.trim();
+  const bearer = k.startsWith('eyJ');
+  const url = `https://api.themoviedb.org/3/search/${kind}?language=fr-FR&include_adult=false&query=${encodeURIComponent(q)}${bearer ? '' : '&api_key='+encodeURIComponent(k)}`;
+  const r = await fetch(url, bearer ? { headers:{ Authorization:'Bearer '+k } } : undefined);
+  if(!r.ok) throw new Error('TMDB '+r.status);
+  const j = await r.json();
+  return (j.results||[]).filter(x=>(x.genre_ids||[]).includes(16)).map(x=>({
+    key:`tmdb:${kind}:${x.id}`, type:scope,
+    title:x.title||x.name, titleRo:'', titleJp:x.original_title||x.original_name||'',
+    cover:x.poster_path ? 'https://image.tmdb.org/t/p/w500'+x.poster_path : '',
+    banner:x.backdrop_path ? 'https://image.tmdb.org/t/p/w780'+x.backdrop_path : '', color:'',
+    year:parseInt((x.release_date||x.first_air_date||'').slice(0,4),10)||null,
+    format: scope==='film' ? 'Film' : 'Série', state:'', episodes:null, chapters:null, volumes:null,
+    genres:[], synopsis:x.overview||'', studios:[], scoreTMDB:x.vote_average ? Math.round(x.vote_average*10)/10 : null, src:['TMDB']
+  }));
+}
+
+/* Croisement : on fusionne les résultats des différents sites */
+function mergeSources(base, jk, tm){
+  const out = base.slice();
+  (jk||[]).forEach(j=>{
+    const a = out.find(m=>m.malId && m.malId===j.malId);
+    if(a){ a.scoreMAL = j.scoreMAL; if(!a.src.includes('MyAnimeList')) a.src.push('MyAnimeList'); if(!a.synopsis) a.synopsis = j.synopsis; }
+    else out.push(j);
+  });
+  (tm||[]).forEach(t=>{
+    const keys = [norm(t.title), norm(t.titleJp)].filter(Boolean);
+    const a = out.find(m=>[m.title,m.titleRo,m.titleJp].some(n=>keys.includes(norm(n))));
+    if(a){ a.fr = { title:t.title, synopsis:t.synopsis }; a.scoreTMDB = t.scoreTMDB; if(!a.src.includes('TMDB')) a.src.push('TMDB'); if(!a.cover) a.cover = t.cover; if(!a.banner) a.banner = t.banner; }
+    else out.push(t);
+  });
+  return out;
+}
+
+/* ═════════ État de l'interface ═════════ */
+const S = { view:'anime', sub:'explore', q:'', results:[], page:1, more:false, loading:false, src:{}, token:0,
+            filter:{ status:'all', sort:'recent', text:'' }, openList:null };
+let debounce;
+
+async function runSearch(append){
+  const scope = S.view, q = S.q.trim(), my = ++S.token;
+  S.loading = true;
+  if(!append){ S.page = 1; S.results = []; S.src = {}; }
+  renderContent();
+  const tasks = [['AniList', anilist(scope,q,S.page)]];
+  if(!append){
+    if(DB.settings.jikan && q) tasks.push(['MyAnimeList', jikan(scope,q)]);
+    if(DB.settings.tmdb && q && scope!=='manga') tasks.push(['TMDB', tmdb(scope,q)]);
+  }
+  const res = await Promise.allSettled(tasks.map(t=>t[1]));
+  if(my !== S.token) return;
+  const state = {};
+  let al = null, jk = null, tm = null;
+  res.forEach((r,i)=>{
+    const name = tasks[i][0];
+    state[name] = r.status==='fulfilled' ? 'ok' : 'ko';
+    if(r.status==='fulfilled'){ if(name==='AniList') al = r.value; if(name==='MyAnimeList') jk = r.value; if(name==='TMDB') tm = r.value; }
+  });
+  S.loading = false;
+  if(append){
+    if(al){ const have = new Set(S.results.map(m=>m.key)); S.results = S.results.concat(al.list.filter(m=>!have.has(m.key))); S.more = al.more; S.page++; }
+  } else {
+    S.src = state;
+    S.results = al ? mergeSources(al.list, jk, tm) : mergeSources([], jk, tm);
+    S.more = al ? al.more : false; S.page = 2;
+  }
+  renderContent();
+}
+
+function go(view){
+  S.view = view; S.sub = 'explore'; S.q = ''; S.results = []; S.src = {}; S.more = false; S.openList = null;
+  S.filter = { status:'all', sort:'recent', text:'' };
+  render();
+  if(TYPE[view]) runSearch(false);
+}
+
+/* ═════════ Composants ═════════ */
+function Stars(val, onSet, big){
+  const w = h('span',{class:'stars'+(onSet?' edit':'')+(big?' lg':''), role:onSet?'group':'img', 'aria-label':'Note : '+val+' sur 5'});
+  for(let i=1;i<=5;i++){
+    const f = Math.max(0, Math.min(1, val-(i-1)));
+    const s = h('span',{class:'star'},'★');
+    s.style.setProperty('--f', (f*100)+'%');
+    if(onSet){
+      s.append(h('i',{class:'l',onclick:()=>onSet(val===i-.5 ? 0 : i-.5)}), h('i',{class:'r',onclick:()=>onSet(val===i ? 0 : i)}));
+    }
+    w.append(s);
+  }
+  return w;
+}
+
+function Poster(meta){
+  return h('div',{class:'poster',style:meta.color?`--c:${meta.color}`:''},
+    h('span',{class:'ph'},meta.title),
+    meta.cover ? h('img',{src:meta.cover,loading:'lazy',alt:'',referrerpolicy:'no-referrer',onerror:ev=>ev.target.remove()}) : null);
+}
+
+function Card(meta){
+  const e = E(meta.key);
+  const rib = (e && (e.status || e.liked)) ? h('div',{class:'ribbon'},
+      h('b',{},e.status ? statusLabel(meta.type,e.status) : ''), e.liked ? h('span',{class:'heart'},'♥') : null) : null;
+  const p = Poster(meta); if(rib) p.append(rib);
+  const scores = [];
+  if(meta.scoreAL) scores.push(h('span',{},'AniList '+(meta.scoreAL/10).toFixed(1)));
+  if(meta.scoreMAL) scores.push(h('span',{},'MAL '+meta.scoreMAL));
+  return h('button',{class:'card',onclick:()=>openDetail(meta)}, p,
+    h('div',{class:'t'},meta.title),
+    h('div',{class:'m'}, meta.year?h('span',{},String(meta.year)):null, meta.format?h('span',{},meta.format):null),
+    e && e.rating ? Stars(e.rating) : (scores.length ? h('div',{class:'sc'},scores) : null));
+}
+
+function Empty(kanji, title, text, action){
+  return h('div',{class:'empty'}, h('div',{class:'vert'},kanji), h('h3',{},title), h('p',{},text), action||null);
+}
+
+/* ═════════ Fiche détaillée ═════════ */
+let CUR = null;
+function openDetail(meta){
+  CUR = { meta, lang:'fr' };
+  renderDetail();
+  document.body.style.overflow = 'hidden';
+}
+function closeDetail(){
+  if(!CUR) return;
+  prune(CUR.meta.key); save();
+  CUR = null; $('#veil') && $('#veil').remove();
+  document.body.style.overflow = '';
+  renderContent();
+}
+function renderDetail(){
+  const meta = CUR.meta, e = E(meta.key) || { status:null, rating:0, liked:false, review:'', progress:0, tags:[], seen:'' };
+  const isManga = meta.type==='manga', isFilm = meta.type==='film';
+  const max = isManga ? meta.chapters : (isFilm ? null : meta.episodes);
+  const unit = isManga ? 'chapitres' : 'épisodes';
+  const syn = (CUR.lang==='fr' && meta.fr && meta.fr.synopsis) ? meta.fr.synopsis : (meta.synopsis || (meta.fr&&meta.fr.synopsis) || 'Pas de synopsis disponible.');
+  const title = (meta.fr && meta.fr.title && meta.fr.title!==meta.title) ? meta.fr.title : meta.title;
+  const facts = [
+    meta.format, meta.year, meta.state,
+    meta.episodes ? meta.episodes+' épisodes' : null,
+    meta.chapters ? meta.chapters+' chapitres' : null,
+    meta.volumes ? meta.volumes+' tomes' : null,
+    meta.studios && meta.studios.length ? meta.studios.join(', ') : null
+  ].filter(Boolean).map(x=>h('span',{},String(x)));
+  const scores = [];
+  if(meta.scoreAL) scores.push('AniList '+(meta.scoreAL/10).toFixed(1)+'/10');
+  if(meta.scoreMAL) scores.push('MyAnimeList '+meta.scoreMAL+'/10');
+  if(meta.scoreTMDB) scores.push('TMDB '+meta.scoreTMDB+'/10');
+
+  const refresh = () => { const sc = $('#veil'); const top = sc ? sc.scrollTop : 0; renderDetail(); const n = $('#veil'); if(n) n.scrollTop = top; };
+  const mut = fn => { const en = ensure(meta); fn(en); touch(en); refresh(); };
+
+  const prog = (max || !isFilm) ? h('div',{class:'row'}, h('label',{},isManga?'Lecture':'Progression'),
+    h('div',{class:'prog'},
+      h('button',{class:'btn ghost sm',onclick:()=>mut(en=>{ en.progress = Math.max(0,(en.progress||0)-1); })},'−'),
+      h('input',{type:'number',min:0,max:max||undefined,value:e.progress||0,'aria-label':unit,onchange:ev=>mut(en=>{ en.progress = Math.max(0, parseInt(ev.target.value,10)||0); if(max) en.progress = Math.min(en.progress,max); if(!en.status && en.progress>0) en.status='current'; })}),
+      h('button',{class:'btn ghost sm',onclick:()=>mut(en=>{ en.progress = Math.min(max||9999,(en.progress||0)+1); if(!en.status) en.status='current'; })},'+'),
+      h('span',{class:'note'}, max ? 'sur '+max+' '+unit : unit))) : null;
+
+  const lists = h('div',{class:'row'}, h('label',{},'Listes'),
+    h('div',{class:'listrow'},
+      DB.lists.map(l=>h('button',{class:'chip'+(l.keys.includes(meta.key)?' on':''),onclick:()=>{
+        const en = ensure(meta);
+        if(l.keys.includes(meta.key)) l.keys = l.keys.filter(k=>k!==meta.key); else l.keys.push(meta.key);
+        touch(en); refresh();
+      }},l.name)),
+      h('button',{class:'chip',onclick:()=>{
+        const n = (prompt('Nom de la nouvelle liste ?')||'').trim(); if(!n) return;
+        const en = ensure(meta); DB.lists.push({ id:uid(), name:n, desc:'', keys:[meta.key] }); touch(en); refresh();
+      }},'+ Nouvelle liste')));
+
+  const veil = h('div',{id:'veil',class:'veil',onclick:ev=>{ if(ev.target.id==='veil') closeDetail(); }},
+    h('div',{class:'sheet',role:'dialog','aria-modal':'true','aria-label':title},
+      h('button',{class:'x','aria-label':'Fermer',onclick:closeDetail},'×'),
+      h('div',{class:'ban',style:(meta.color?`--c:${meta.color};`:'')+(meta.banner?`background-image:url('${meta.banner.replace(/'/g,'%27')}')`:'')}),
+      h('div',{class:'body'},
+        Poster(meta),
+        h('div',{},
+          h('h2',{},title),
+          meta.titleJp ? h('div',{class:'jp'},meta.titleJp) : null,
+          h('div',{class:'facts'},facts),
+          meta.genres && meta.genres.length ? h('div',{class:'genres'},meta.genres.map(g=>h('span',{},g))) : null,
+          scores.length ? h('div',{class:'note',style:'margin-bottom:10px'},scores.join('   ')) : null,
+          meta.fr && meta.fr.synopsis && meta.synopsis ? h('div',{class:'langs'},
+            h('button',{class:'chip'+(CUR.lang==='fr'?' on':''),onclick:()=>{CUR.lang='fr';refresh();}},'Français'),
+            h('button',{class:'chip'+(CUR.lang==='en'?' on':''),onclick:()=>{CUR.lang='en';refresh();}},'Version originale')) : null,
+          h('div',{class:'syn'},syn),
+          h('div',{class:'note',style:'margin-top:8px'},'Sources : '+(meta.src||[]).join(', '))),
+        h('div',{class:'panel'},
+          h('div',{class:'row'}, h('label',{},'Statut'),
+            h('div',{class:'chips'}, STATUS(meta.type).map(([v,l])=>h('button',{class:'chip'+(e.status===v?' on':''),onclick:()=>mut(en=>{
+              en.status = en.status===v ? null : v;
+              if(v==='done' && en.status){ const m = isManga ? meta.chapters : meta.episodes; if(m) en.progress = m; if(!en.seen) en.seen = today(); }
+            })},l)))),
+          h('div',{class:'row'}, h('label',{},'Ta note'),
+            Stars(e.rating||0, v=>mut(en=>{ en.rating = v; }), true),
+            h('button',{class:'heartbtn'+(e.liked?' on':''),'aria-label':'Coup de cœur','aria-pressed':String(!!e.liked),onclick:()=>mut(en=>{ en.liked = !en.liked; })},'♥')),
+          prog,
+          h('div',{class:'row'}, h('label',{},isManga?'Lu le':'Vu le'),
+            h('input',{type:'date',value:e.seen||'',onchange:ev=>{ const en = ensure(meta); en.seen = ev.target.value; touch(en); }}),
+            h('input',{type:'text',placeholder:'Étiquettes : mécha, cosy, à revoir…',value:(e.tags||[]).join(', '),style:'flex:1 1 220px',onchange:ev=>{ const en = ensure(meta); en.tags = ev.target.value.split(',').map(s=>s.trim()).filter(Boolean); touch(en); }})),
+          h('textarea',{placeholder:'Ta critique (visible seulement par toi)…',oninput:ev=>{ const en = ensure(meta); en.review = ev.target.value; en.upd = Date.now(); save(); },onblur:()=>{ const en=E(meta.key); if(en) { touch(en); } }},e.review||''),
+          lists,
+          h('div',{class:'row'},
+            h('button',{class:'btn',onclick:()=>logDiary(meta)},isManga?'Ajouter au journal de lecture':'Ajouter au journal'),
+            E(meta.key) && active(E(meta.key)) ? h('button',{class:'btn ghost',onclick:()=>{
+              if(!confirm('Retirer cette œuvre de ta collection ? Ta note, ta critique et ses entrées du journal seront supprimées.')) return;
+              delete DB.items[meta.key]; DB.diary = DB.diary.filter(d=>d.key!==meta.key); DB.lists.forEach(l=>{ l.keys = l.keys.filter(k=>k!==meta.key); }); save(); closeDetail(); toast('Retiré de ta collection');
+            }},'Retirer de ma collection') : null)))));
+  const old = $('#veil'); const top = old ? old.scrollTop : 0;
+  if(old) old.remove();
+  document.body.append(veil);
+  veil.scrollTop = top;
+}
+
+function logDiary(meta){
+  const e = ensure(meta);
+  const date = e.seen || today();
+  const rewatch = DB.diary.some(d=>d.key===meta.key);
+  DB.diary.push({ id:uid(), key:meta.key, date, rating:e.rating||0, review:e.review||'', rewatch });
+  e.seen = date; e.status = 'done';
+  const m = meta.type==='manga' ? meta.chapters : (meta.type==='anime' ? meta.episodes : null);
+  if(m) e.progress = m;
+  touch(e); toast(meta.type==='manga' ? 'Ajouté à ton journal de lecture' : 'Ajouté à ton journal');
+  renderDetail();
+}
+
+/* ═════════ Vues ═════════ */
+function renderHeader(){
+  const items = [['anime','アニメ','Animés'],['film','映画','Films'],['manga','漫画','Mangas'],['journal','日記','Journal'],['lists','一覧','Listes'],['profile','私','Profil']];
+  return h('div',{},
+    h('div',{class:'top'},
+      h('div',{class:'brand'}, h('div',{class:'hanko','aria-hidden':'true'},APP.kanji), h('div',{}, h('h1',{},APP.name), h('small',{},APP.tag))),
+      h('nav',{'aria-label':'Navigation principale'}, items.map(([v,k,l])=>h('button',{class:S.view===v?'on':'','aria-current':S.view===v?'page':null,onclick:()=>go(v)}, h('i',{},k), h('span',{},l))))));
+}
+
+function render(){
+  const app = $('#app'); app.replaceChildren(renderHeader(), h('main',{}, h('div',{id:'toolbar'}), h('div',{id:'content'})));
+  renderToolbar(); renderContent();
+}
+
+function renderToolbar(){
+  const tb = $('#toolbar'); tb.replaceChildren();
+  if(!TYPE[S.view]) return;
+  const T = TYPE[S.view];
+  tb.append(h('div',{class:'head'},
+    h('div',{class:'vert','aria-hidden':'true'},T.kanji),
+    h('div',{}, h('h2',{},T.label), h('p',{},T.desc)),
+    h('div',{class:'tabs'},
+      h('button',{class:S.sub==='explore'?'on':'',onclick:()=>{ S.sub='explore'; renderToolbar(); renderContent(); }},'Explorer'),
+      h('button',{class:S.sub==='mine'?'on':'',onclick:()=>{ S.sub='mine'; renderToolbar(); renderContent(); }},'Ma collection'))));
+  if(S.sub==='explore'){
+    const inp = h('input',{type:'search',id:'q',placeholder:S.view==='manga'?'Chercher un manga…':S.view==='film'?'Chercher un film d’animation…':'Chercher un animé…',value:S.q,'aria-label':'Recherche',
+      oninput:ev=>{ S.q = ev.target.value; clearTimeout(debounce); debounce = setTimeout(()=>runSearch(false),500); },
+      onkeydown:ev=>{ if(ev.key==='Enter'){ clearTimeout(debounce); runSearch(false); } }});
+    tb.append(h('div',{class:'search'}, inp, h('button',{class:'btn',onclick:()=>{ clearTimeout(debounce); runSearch(false); }},'Chercher')));
+    tb.append(h('div',{class:'sources',id:'srcs'}));
+  } else {
+    tb.append(h('div',{class:'filters'},
+      h('div',{class:'chips'}, [['all','Tout'],...STATUS(S.view),['liked','Coups de cœur']].map(([v,l])=>h('button',{class:'chip'+(S.filter.status===v?' on':''),onclick:()=>{ S.filter.status=v; renderToolbar(); renderContent(); }},l))),
+      h('select',{'aria-label':'Tri',value:S.filter.sort,onchange:ev=>{ S.filter.sort=ev.target.value; renderContent(); }},
+        h('option',{value:'recent'},'Ajoutés récemment'), h('option',{value:'rating'},'Meilleures notes'), h('option',{value:'title'},'Titre A-Z'), h('option',{value:'year'},'Année')),
+      h('input',{type:'search',placeholder:'Filtrer…',value:S.filter.text,'aria-label':'Filtrer',oninput:ev=>{ S.filter.text=ev.target.value; renderContent(); }})));
+  }
+}
+
+function renderContent(){
+  const c = $('#content'); if(!c) return;
+  c.replaceChildren();
+  const v = S.view;
+  if(TYPE[v]){
+    if(S.sub==='explore'){
+      const s = $('#srcs');
+      if(s){ s.replaceChildren(); const names = Object.keys(S.src);
+        names.forEach(n=>s.append(h('span',{class:S.src[n]},n+(S.src[n]==='ok'?' · connecté':' · injoignable'))));
+        if(S.loading) s.append(h('span',{},h('i',{class:'spin'}),'Recherche en cours…')); }
+      if(S.loading && !S.results.length) return;
+      if(!S.results.length){
+        const failed = S.src.AniList==='ko';
+        c.append(Empty('空', failed ? 'Connexion impossible' : 'Aucun résultat',
+          failed ? 'Les sites de données sont inaccessibles. Si tu vois cette page dans l’aperçu de Claude, télécharge le fichier et ouvre-le dans ton navigateur (Chrome, Safari, Firefox) : la recherche y fonctionne. Ta collection reste disponible hors ligne.' : 'Essaie un autre titre, en romaji ou en anglais.',
+          failed ? h('button',{class:'btn',onclick:()=>{ S.sub='mine'; renderToolbar(); renderContent(); }},'Ouvrir ma collection') : null));
+        return;
+      }
+      if(!S.q.trim()) c.append(h('h3',{style:'margin:0 0 14px;font-size:19px'},'Tendances du moment'));
+      c.append(h('div',{class:'grid'},S.results.map(Card)));
+      if(S.more) c.append(h('button',{class:'btn ghost more',onclick:()=>runSearch(true)},'Voir plus de résultats'));
+    } else {
+      let list = Object.values(DB.items).filter(e=>active(e) && e.meta.type===v);
+      const f = S.filter;
+      if(f.status==='liked') list = list.filter(e=>e.liked); else if(f.status!=='all') list = list.filter(e=>e.status===f.status);
+      if(f.text.trim()){ const t = norm(f.text); list = list.filter(e=>[e.meta.title,e.meta.titleRo,e.meta.titleJp,(e.tags||[]).join(' ')].some(x=>norm(x).includes(t))); }
+      const sorters = { recent:(a,b)=>b.upd-a.upd, rating:(a,b)=>b.rating-a.rating||b.upd-a.upd, title:(a,b)=>a.meta.title.localeCompare(b.meta.title,'fr'), year:(a,b)=>(b.meta.year||0)-(a.meta.year||0) };
+      list.sort(sorters[f.sort]);
+      if(!list.length){
+        c.append(Empty('空', 'Rien ici pour l’instant', v==='manga' ? 'Cherche un manga, puis note-le ou range-le sur ton étagère.' : 'Cherche une œuvre dans Explorer, puis note-la ou ajoute-la à ta liste.',
+          h('button',{class:'btn',onclick:()=>{ S.sub='explore'; renderToolbar(); renderContent(); }},'Explorer '+TYPE[v].label.toLowerCase())));
+        return;
+      }
+      c.append(h('div',{class:'grid'},list.map(e=>Card(e.meta))));
+    }
+    return;
+  }
+  if(v==='journal') return viewJournal(c);
+  if(v==='lists') return viewLists(c);
+  if(v==='profile') return viewProfile(c);
+}
+
+function sectionHead(kanji,title,text,extra){
+  return h('div',{class:'head'}, h('div',{class:'vert','aria-hidden':'true'},kanji), h('div',{}, h('h2',{},title), h('p',{},text)), extra? h('div',{class:'tabs'},extra) : null);
+}
+
+function viewJournal(c){
+  c.append(sectionHead('日記','Journal','Chaque œuvre terminée, avec la date, ta note et ta critique.'));
+  const list = DB.diary.slice().sort((a,b)=>b.date.localeCompare(a.date) || 0);
+  if(!list.length){ c.append(Empty('日','Ton journal est vide','Ouvre une fiche, note l’œuvre, puis choisis Ajouter au journal.')); return; }
+  let cur = '';
+  list.forEach(d=>{
+    const m = metaOf(d.key); if(!m) return;
+    const month = new Date(d.date+'T12:00:00').toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+    if(month!==cur){ cur = month; c.append(h('div',{class:'month'},month)); }
+    c.append(h('div',{class:'entry'},
+      h('div',{class:'d'},String(new Date(d.date+'T12:00:00').getDate())),
+      h('button',{class:'card','aria-label':m.title,onclick:()=>openDetail(m)},Poster(m)),
+      h('div',{},
+        h('h3',{},m.title, m.year?h('span',{class:'tag'},String(m.year)):null, d.rewatch?h('span',{class:'tag'},m.type==='manga'?'relu':'revu'):null),
+        d.rating ? Stars(d.rating) : null,
+        d.review ? h('p',{},d.review) : null),
+      h('button',{class:'btn ghost sm','aria-label':'Supprimer cette entrée',onclick:()=>{ if(confirm('Supprimer cette entrée du journal ?')){ DB.diary = DB.diary.filter(x=>x.id!==d.id); save(); renderContent(); } }},'Supprimer')));
+  });
+}
+
+function viewLists(c){
+  if(S.openList){
+    const l = DB.lists.find(x=>x.id===S.openList);
+    if(!l){ S.openList = null; return viewLists(c); }
+    c.append(sectionHead('一覧',l.name, l.desc || 'Une sélection à toi.', [
+      h('button',{onclick:()=>{ S.openList=null; renderContent(); }},'Toutes les listes'),
+      h('button',{onclick:()=>{ const n=(prompt('Nouveau nom ?',l.name)||'').trim(); if(n){ l.name=n; save(); renderContent(); } }},'Renommer'),
+      h('button',{onclick:()=>{ if(confirm('Supprimer la liste « '+l.name+' » ? Les œuvres restent dans ta collection.')){ DB.lists = DB.lists.filter(x=>x.id!==l.id); S.openList=null; save(); renderContent(); } }},'Supprimer')]));
+    const metas = l.keys.map(metaOf).filter(Boolean);
+    if(!metas.length){ c.append(Empty('空','Liste vide','Ouvre une fiche et ajoute-la ici depuis la ligne Listes.')); return; }
+    c.append(h('div',{class:'grid'},metas.map(Card)));
+    return;
+  }
+  c.append(sectionHead('一覧','Listes','Regroupe tes œuvres : classiques, à voir ce week-end, mangas à offrir…',
+    [h('button',{class:'on',onclick:()=>{ const n=(prompt('Nom de la liste ?')||'').trim(); if(n){ DB.lists.push({id:uid(),name:n,desc:'',keys:[]}); save(); renderContent(); } }},'Nouvelle liste')]));
+  if(!DB.lists.length){ c.append(Empty('一','Aucune liste','Crée ta première liste, puis ajoute-y des œuvres depuis leur fiche.')); return; }
+  c.append(h('div',{class:'lists'},DB.lists.map(l=>{
+    const ms = l.keys.map(metaOf).filter(Boolean).slice(0,4);
+    return h('button',{class:'lcard',onclick:()=>{ S.openList=l.id; renderContent(); }},
+      h('div',{class:'mosaic'}, [0,1,2,3].map(i=>h('div',{style:ms[i]&&ms[i].cover?`background-image:url('${ms[i].cover.replace(/'/g,'%27')}')`:''}))),
+      h('h3',{},l.name), h('small',{},l.keys.length+(l.keys.length>1?' œuvres':' œuvre')));
+  })));
+}
+
+function viewProfile(c){
+  c.append(sectionHead('私','Profil','Ce que tu as regardé, lu et aimé.'));
+  const all = Object.values(DB.items).filter(active);
+  const of = t => all.filter(e=>e.meta.type===t);
+  const done = t => of(t).filter(e=>e.status==='done').length;
+  const rated = all.filter(e=>e.rating>0);
+  const avg = rated.length ? (rated.reduce((s,e)=>s+e.rating,0)/rated.length) : 0;
+  let minutes = 0, chapters = 0;
+  all.forEach(e=>{
+    const m = e.meta;
+    if(m.type==='anime'){ const n = e.status==='done' ? (e.progress || m.episodes || 1) : (e.progress||0); minutes += n*24; }
+    else if(m.type==='film' && e.status==='done') minutes += 100;
+    else if(m.type==='manga'){ chapters += e.status==='done' ? (e.progress || m.chapters || 0) : (e.progress||0); }
+  });
+  c.append(h('div',{class:'stats'},
+    h('div',{class:'stat'},h('b',{},String(done('anime'))),h('span',{},'animés terminés')),
+    h('div',{class:'stat'},h('b',{},String(done('film'))),h('span',{},'films vus')),
+    h('div',{class:'stat'},h('b',{},String(done('manga'))),h('span',{},'mangas lus')),
+    h('div',{class:'stat'},h('b',{},Math.round(minutes/60)+' h'),h('span',{},'devant l’écran (estimation)')),
+    h('div',{class:'stat'},h('b',{},String(chapters)),h('span',{},'chapitres lus')),
+    h('div',{class:'stat'},h('b',{},rated.length ? avg.toFixed(2) : '—'),h('span',{},'note moyenne sur 5'))));
+
+  const dist = Array.from({length:10},(_,i)=>rated.filter(e=>e.rating===(i+1)/2).length);
+  const mx = Math.max(1,...dist);
+  const gc = {}; all.forEach(e=>(e.meta.genres||[]).forEach(g=>{ gc[g]=(gc[g]||0)+1; }));
+  const top = Object.entries(gc).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const tm = Math.max(1,...top.map(x=>x[1]));
+  const liked = all.filter(e=>e.liked);
+
+  c.append(h('div',{class:'two'},
+    h('div',{class:'sec'},h('h3',{},'Répartition de tes notes'),
+      rated.length ? h('div',{class:'histo'},dist.map((n,i)=>h('div',{},h('span',{},n?String(n):''),h('i',{style:`height:${Math.round(n/mx*100)}%`}),h('span',{},String((i+1)/2))))) : h('p',{class:'note'},'Note quelques œuvres pour voir apparaître ta courbe.')),
+    h('div',{class:'sec'},h('h3',{},'Genres préférés'),
+      top.length ? h('div',{class:'bars'},top.map(([g,n])=>h('div',{class:'bar'},h('span',{},g),h('i',{style:`width:${Math.round(n/tm*100)}%`}),h('span',{},String(n))))) : h('p',{class:'note'},'Tes genres apparaîtront ici.'))));
+
+  if(liked.length) c.append(h('div',{class:'sec',style:'margin-bottom:26px'},h('h3',{},'Coups de cœur'),h('div',{class:'grid'},liked.slice(0,12).map(e=>Card(e.meta)))));
+
+  /* Réglages */
+  const tmdbIn = h('input',{type:'password',placeholder:'Clé API TMDB ou jeton (facultatif)',value:DB.settings.tmdb,autocomplete:'off','aria-label':'Clé TMDB'});
+  const file = h('input',{type:'file',accept:'application/json',style:'display:none',onchange:ev=>{
+    const f = ev.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = () => { try{ const d = JSON.parse(r.result); if(!d.items) throw 0; DB = Object.assign(defaults(), d); save(); toast('Sauvegarde importée'); render(); }catch(e){ alert('Ce fichier n’est pas une sauvegarde Kizuna valide.'); } };
+    r.readAsText(f);
+  }});
+  c.append(h('div',{class:'sec'},h('h3',{},'Réglages et sauvegarde'),
+    h('div',{class:'setrow'},
+      h('label',{},h('input',{type:'checkbox',checked:DB.settings.jikan,onchange:ev=>{ DB.settings.jikan = ev.target.checked; save(); }}),' Croiser avec MyAnimeList (Jikan)')),
+    h('div',{class:'setrow'}, tmdbIn, h('button',{class:'btn ghost sm',onclick:()=>{ DB.settings.tmdb = tmdbIn.value.trim(); save(); toast(DB.settings.tmdb?'Clé TMDB enregistrée':'TMDB désactivé'); }},'Enregistrer')),
+    h('p',{class:'note'},'TMDB ajoute les titres et synopsis en français. Crée une clé gratuite sur themoviedb.org, elle reste uniquement sur cet appareil.'),
+    h('div',{class:'setrow'},
+      h('button',{class:'btn',onclick:()=>{
+        const blob = new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+        const a = h('a',{href:URL.createObjectURL(blob),download:`kizuna-sauvegarde-${today()}.json`}); document.body.append(a); a.click(); a.remove();
+      }},'Exporter ma collection'),
+      h('button',{class:'btn ghost',onclick:()=>file.click()},'Importer une sauvegarde'), file,
+      h('button',{class:'btn ghost',onclick:()=>{ if(confirm('Effacer toute ta collection, ton journal et tes listes ? Cette action est définitive.')){ DB = defaults(); save(); render(); } }},'Tout effacer'))));
+}
+
+document.addEventListener('keydown',ev=>{ if(ev.key==='Escape' && CUR) closeDetail(); });
+render();
+runSearch(false);
+</script>
+</body>
+</html>
