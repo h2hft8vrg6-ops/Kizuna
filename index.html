@@ -245,6 +245,29 @@ footer{text-align:center;color:var(--washi-dim);font-size:12.5px;padding:0 14px 
 .srow{display:grid;grid-template-columns:46px 1fr auto;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
 .srow .poster{width:46px}
 .pill{font-size:12.5px;border:1px solid var(--kinpaku);color:var(--kinpaku);padding:1px 10px;border-radius:999px;white-space:nowrap}
+.dw-back{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,0);transition:background .28s}
+.dw-back.open{background:rgba(0,0,0,.52)}
+.drawer{position:absolute;top:0;bottom:0;left:0;width:min(330px,86vw);background:var(--ai-800);border-right:1px solid var(--line);transform:translateX(-102%);transition:transform .28s ease;overflow-y:auto;padding:16px 14px 28px;box-shadow:8px 0 40px rgba(0,0,0,.4)}
+.drawer.open{transform:translateX(0)}
+.dw-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.dw-prof{display:flex;gap:12px;align-items:center;text-align:left;min-width:0}
+.dw-prof b{font-family:var(--serif);font-size:18px;display:block}
+.dw-prof small{color:var(--washi-dim)}
+.dw-x{width:36px;height:36px;border-radius:50%;background:var(--ai-700);font-size:20px;line-height:1;flex:none}
+.dw-sec{font-family:var(--serif);color:var(--kinpaku);font-size:15px;margin:18px 6px 4px}
+.dw-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px 8px;border-radius:5px}
+.dw-item:hover{background:var(--ai-700)}
+.dw-item.on{background:var(--ai-700);box-shadow:inset 3px 0 0 var(--hanko)}
+.dw-item i{font-style:normal;font-family:var(--serif);color:var(--hanko);width:24px;text-align:center;font-size:17px}
+.dw-ver{margin-top:22px;font-size:12.5px;color:var(--washi-dim);text-align:center}
+.brand{cursor:pointer}
+.burger{font-size:22px;color:var(--washi-dim);margin-left:2px}
+.fbar{display:grid;gap:10px;margin-bottom:12px}
+.frow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.frow select{padding:.45em .7em;max-width:100%}
+.letters{display:flex;flex-wrap:wrap;gap:4px}
+.lt{min-width:30px;height:30px;padding:0 7px;border:1px solid var(--line);border-radius:4px;font-family:var(--serif);font-size:14px;color:var(--washi-dim)}
+.lt.on{background:var(--washi);color:var(--ai-900);border-color:var(--washi);font-weight:700}
 @media (max-width:640px){
   nav{flex-wrap:wrap;overflow:visible;margin-left:0;width:100%}
   nav button{flex:1 1 21%;padding:6px 2px 7px}
@@ -263,12 +286,12 @@ footer{text-align:center;color:var(--washi-dim);font-size:12.5px;padding:0 14px 
 </head>
 <body>
 <div id="app"></div>
-<footer>Données fournies par AniList, MyAnimeList (via Jikan) et TMDB. Ta collection reste enregistrée sur cet appareil.</footer>
+<footer>Kizuna · version <span id="ver"></span> · Données fournies par AniList, MyAnimeList (via Jikan) et TMDB. Ta collection reste enregistrée sur cet appareil.</footer>
 
 <script>
 'use strict';
 /* ═════════ Identité (change le nom ici) ═════════ */
-const APP = { name:'Kizuna', kanji:'絆', tag:'Le journal de tes animés, films et mangas' };
+const APP = { version:'4', name:'Kizuna', kanji:'絆', tag:'Le journal de tes animés, films et mangas' };
 
 /* ═════════ Stockage local ═════════ */
 const KEY = 'kizuna.v1';
@@ -363,18 +386,38 @@ async function alPost(query, variables){
   if(j.errors) throw new Error(j.errors[0].message);
   return j.data;
 }
-async function anilist(scope, q, page, custom){
+const GENRES = [['Action','Action'],['Adventure','Aventure'],['Comedy','Comédie'],['Drama','Drame'],['Fantasy','Fantasy'],['Horror','Horreur'],['Mahou Shoujo','Magical girl'],['Mecha','Mecha'],['Music','Musique'],['Mystery','Mystère'],['Psychological','Psychologique'],['Romance','Romance'],['Sci-Fi','Science-fiction'],['Slice of Life','Tranche de vie'],['Sports','Sport'],['Supernatural','Surnaturel'],['Thriller','Thriller']];
+const genreArg = () => S.genre ? ` genre_in:["${S.genre}"]` : '';
+const yearArg = () => S.year ? ` startDate_greater:${S.year-1}1231 startDate_lesser:${S.year+1}0101` : '';
+function letterOf(t){ if(!t) return ''; const x = t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').match(/[A-Za-z0-9]/); if(!x) return '#'; return /\d/.test(x[0]) ? '#' : x[0].toUpperCase(); }
+const matchLetter = (m,L) => letterOf(m.title)===L || letterOf(m.titleRo)===L;
+function visibleResults(){
+  let l = S.results;
+  if(S.letter) l = l.filter(m=>matchLetter(m,S.letter));
+  if(S.sort==='ALPHA' && !S.q.trim() && S.sub==='explore') l = l.slice().sort((a,b)=>a.title.localeCompare(b.title,'fr',{sensitivity:'base'}));
+  return l;
+}
+async function anilist(scope, q, page, custom, perPage){
   let args, decl, vars;
-  if(custom){ args = custom; decl = '$p:Int'; vars = { p:page }; }
+  if(custom){ args = custom + genreArg(); decl = '$p:Int'; vars = { p:page }; }
   else {
     const fmt = scope==='film' ? 'format:MOVIE' : scope==='anime' ? 'format_not_in:[MOVIE]' : 'format_in:[MANGA,ONE_SHOT]';
     const type = scope==='manga' ? 'MANGA' : 'ANIME';
     decl = q ? '$s:String,$p:Int' : '$p:Int';
-    args = `type:${type} ${fmt} isAdult:false ${q ? 'search:$s sort:SEARCH_MATCH' : 'sort:'+S.sort+(S.sort==='SCORE_DESC' ? ' popularity_greater:10000' : '')}`;
+    const sortArg = S.sort==='SCORE_DESC' ? 'sort:SCORE_DESC popularity_greater:10000' : 'sort:'+(S.sort==='ALPHA' ? 'POPULARITY_DESC' : S.sort);
+    args = `type:${type} ${fmt} isAdult:false ${q ? 'search:$s sort:SEARCH_MATCH' : sortArg}${genreArg()}${yearArg()}`;
     vars = q ? { s:q, p:page } : { p:page };
   }
-  const data = await alPost(`query(${decl}){Page(page:$p,perPage:24){pageInfo{hasNextPage} media(${args}){${AL_FIELDS}}}}`, vars);
+  const data = await alPost(`query(${decl}){Page(page:$p,perPage:${perPage||24}){pageInfo{hasNextPage} media(${args}){${AL_FIELDS}}}}`, vars);
   return { more:data.Page.pageInfo.hasNextPage, list:data.Page.media.map(alNorm) };
+}
+async function anilistBatch(scope, startPage, custom){
+  const pages = Array.from({length:6},(_,i)=>startPage+i);
+  const rs = await Promise.allSettled(pages.map(pg=>anilist(scope,'',pg,custom,50)));
+  const seen = new Set(), list = []; let more = false, ok = false;
+  rs.forEach(r=>{ if(r.status==='fulfilled'){ ok = true; r.value.list.forEach(m=>{ if(!seen.has(m.key)){ seen.add(m.key); list.push(m); } }); more = r.value.more; } });
+  if(!ok) throw new Error('AniList');
+  return { list, more, next:startPage+6 };
 }
 async function anilistWeek(from, to){
   const out = [];
@@ -444,7 +487,7 @@ function mergeSources(base, jk, tm){
 /* ═════════ État de l'interface ═════════ */
 const S = { view:'anime', sub:'explore', q:'', results:[], page:1, more:false, loading:false, src:{}, token:0,
             filter:{ status:'all', sort:'recent', text:'' }, openList:null,
-            season:curSeason(), sort:'POPULARITY_DESC', shelf:{ q:'', res:[], loading:false, err:false, open:{}, tok:0, dt:null }, cal:{ off:0, data:{}, loading:false, err:false, pop:true, mine:false } };
+            season:curSeason(), sort:'POPULARITY_DESC', letter:'', genre:'', year:0, shelf:{ q:'', res:[], loading:false, err:false, open:{}, tok:0, dt:null }, cal:{ off:0, data:{}, loading:false, err:false, pop:true, mine:false } };
 const SEASONS = ['WINTER','SPRING','SUMMER','FALL'];
 const SEASON_FR = { WINTER:'Hiver', SPRING:'Printemps', SUMMER:'Été', FALL:'Automne' };
 function curSeason(){ const d = new Date(); return { s:['WINTER','SPRING','SUMMER','FALL'][Math.floor(d.getMonth()/3)], y:d.getFullYear() }; }
@@ -457,7 +500,10 @@ async function runSearch(append){
   S.loading = true;
   if(!append){ S.page = 1; S.results = []; S.src = {}; }
   renderContent();
-  const tasks = [['AniList', S.sub==='season' ? anilist('anime','',S.page,seasonArgs()) : anilist(scope,q,S.page)]];
+  const batch = !q && (S.letter || (S.sub==='explore' && S.sort==='ALPHA'));
+  const first = batch ? anilistBatch(scope,S.page,S.sub==='season' ? seasonArgs() : null)
+                      : (S.sub==='season' ? anilist('anime','',S.page,seasonArgs()) : anilist(scope,q,S.page));
+  const tasks = [['AniList', first]];
   if(!append){
     if(DB.settings.jikan && q) tasks.push(['MyAnimeList', jikan(scope,q)]);
     if(DB.settings.tmdb && q && scope!=='manga') tasks.push(['TMDB', tmdb(scope,q)]);
@@ -473,20 +519,20 @@ async function runSearch(append){
   });
   S.loading = false;
   if(append){
-    if(al){ const have = new Set(S.results.map(m=>m.key)); S.results = S.results.concat(al.list.filter(m=>!have.has(m.key))); S.more = al.more; S.page++; }
+    if(al){ const have = new Set(S.results.map(m=>m.key)); S.results = S.results.concat(al.list.filter(m=>!have.has(m.key))); S.more = al.more; S.page = al.next || S.page+1; }
   } else {
     S.src = state;
     S.results = al ? mergeSources(al.list, jk, tm) : mergeSources([], jk, tm);
-    S.more = al ? al.more : false; S.page = 2;
+    S.more = al ? al.more : false; S.page = (al && al.next) || 2;
   }
   renderContent();
 }
 
-function go(view){
-  S.view = view; S.sub = 'explore'; S.q = ''; S.results = []; S.src = {}; S.more = false; S.openList = null;
+function go(view, sub){
+  S.view = view; S.sub = sub || 'explore'; S.q = ''; S.results = []; S.src = {}; S.more = false; S.openList = null; S.letter = ''; S.genre = ''; S.year = 0;
   S.filter = { status:'all', sort:'recent', text:'' };
   render();
-  if(TYPE[view]) runSearch(false); else if(view==='calendar') loadCalendar();
+  if(TYPE[view] && S.sub!=='mine') runSearch(false); else if(view==='calendar') loadCalendar();
 }
 
 /* ═════════ Composants ═════════ */
@@ -650,7 +696,7 @@ function renderHeader(){
   const items = [['anime','アニメ','Animés'],['film','映画','Films'],['manga','漫画','Mangas'],['calendar','暦','Calendrier'],['journal','日記','Journal'],['lists','一覧','Listes'],['shelf','本棚','Bibliothèque'],['profile','私','Profil']];
   return h('div',{},
     h('div',{class:'top'},
-      h('div',{class:'brand'}, h('button',{class:'hanko','aria-label':'Profil rapide',title:'Profil rapide',onclick:openQuick},APP.kanji), h('div',{}, h('h1',{},APP.name), h('small',{},APP.tag))),
+      h('div',{class:'brand',role:'button',tabindex:'0','aria-label':'Ouvrir le menu',onclick:openDrawer,onkeydown:ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); openDrawer(); } }}, h('div',{class:'hanko','aria-hidden':'true'},APP.kanji), h('div',{}, h('h1',{},APP.name), h('small',{},APP.tag)), h('span',{class:'burger','aria-hidden':'true'},'☰')),
       h('nav',{'aria-label':'Navigation principale'}, items.map(([v,k,l])=>h('button',{class:S.view===v?'on':'','aria-current':S.view===v?'page':null,onclick:()=>go(v)}, h('i',{},k), h('span',{},l))))));
 }
 
@@ -660,9 +706,29 @@ function render(){
 }
 
 function setSub(v){
-  S.sub = v; S.results = []; S.src = {}; S.more = false;
+  S.letter = ''; S.sub = v; S.results = []; S.src = {}; S.more = false;
   if(v==='explore' || v==='season'){ if(v==='season') S.q = ''; renderToolbar(); runSearch(false); }
   else { renderToolbar(); renderContent(); }
+}
+function letterStrip(re){
+  const L = ['#',...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'];
+  return h('div',{class:'letters',role:'group','aria-label':'Filtrer par lettre'},
+    h('button',{class:'lt'+(!S.letter?' on':''),'aria-pressed':String(!S.letter),onclick:()=>{ S.letter = ''; re(); }},'Tous'),
+    L.map(x=>h('button',{class:'lt'+(S.letter===x?' on':''),'aria-pressed':String(S.letter===x),onclick:()=>{ S.letter = x; re(); }},x)));
+}
+function filterBar(kind){
+  const re = () => { renderToolbar(); if(kind==='mine') renderContent(); else runSearch(false); };
+  const box = h('div',{class:'fbar'});
+  if(kind==='explore') box.append(h('div',{class:'chips'},[['POPULARITY_DESC','Les plus populaires'],['TRENDING_DESC','Tendances'],['SCORE_DESC','Mieux notés'],['ALPHA','A → Z']].map(([v,l])=>h('button',{class:'chip'+(S.sort===v?' on':''),'aria-pressed':String(S.sort===v),onclick:()=>{ S.sort = v; re(); }},l))));
+  if(kind!=='mine'){
+    const yrs = []; for(let y=new Date().getFullYear()+1; y>=1980; y--) yrs.push(y);
+    box.append(h('div',{class:'frow'},
+      h('select',{'aria-label':'Catégorie',value:S.genre,onchange:ev=>{ S.genre = ev.target.value; re(); }}, h('option',{value:''},'Toutes les catégories'), GENRES.map(([v,l])=>h('option',{value:v},l))),
+      kind==='explore' ? h('select',{'aria-label':'Année',value:S.year?String(S.year):'',onchange:ev=>{ S.year = parseInt(ev.target.value,10)||0; re(); }}, h('option',{value:''},'Toutes les années'), yrs.map(y=>h('option',{value:String(y)},String(y)))) : null,
+      (S.genre || S.year || S.letter) ? h('button',{class:'btn ghost sm',onclick:()=>{ S.genre = ''; S.year = 0; S.letter = ''; re(); }},'Réinitialiser') : null));
+  }
+  box.append(letterStrip(re));
+  return box;
 }
 function renderToolbar(){
   const tb = $('#toolbar'); tb.replaceChildren();
@@ -680,6 +746,7 @@ function renderToolbar(){
       oninput:ev=>{ S.q = ev.target.value; clearTimeout(debounce); debounce = setTimeout(()=>runSearch(false),500); },
       onkeydown:ev=>{ if(ev.key==='Enter'){ clearTimeout(debounce); runSearch(false); } }});
     tb.append(h('div',{class:'search'}, inp, h('button',{class:'btn',onclick:()=>{ clearTimeout(debounce); runSearch(false); }},'Chercher')));
+    tb.append(filterBar('explore'));
     tb.append(h('div',{class:'sources',id:'srcs'}));
   } else if(S.sub==='season'){
     const re = () => { S.results = []; S.src = {}; renderToolbar(); runSearch(false); };
@@ -688,6 +755,7 @@ function renderToolbar(){
       h('span',{class:'label'},SEASON_FR[S.season.s]+' '+S.season.y),
       h('button',{class:'btn ghost sm',onclick:()=>{ shiftSeason(1); re(); }},'Suivante ›'),
       h('button',{class:'btn ghost sm',onclick:()=>{ S.season = curSeason(); re(); }},'Saison actuelle')));
+    tb.append(filterBar('season'));
     tb.append(h('div',{class:'sources',id:'srcs'}));
   } else {
     tb.append(h('div',{class:'filters'},
@@ -695,6 +763,7 @@ function renderToolbar(){
       h('select',{'aria-label':'Tri',value:S.filter.sort,onchange:ev=>{ S.filter.sort=ev.target.value; renderContent(); }},
         h('option',{value:'recent'},'Ajoutés récemment'), h('option',{value:'rating'},'Meilleures notes'), h('option',{value:'title'},'Titre A-Z'), h('option',{value:'year'},'Année')),
       h('input',{type:'search',placeholder:'Filtrer…',value:S.filter.text,'aria-label':'Filtrer',oninput:ev=>{ S.filter.text=ev.target.value; renderContent(); }})));
+    tb.append(filterBar('mine'));
   }
 }
 
@@ -717,8 +786,14 @@ function renderContent(){
         return;
       }
       if(S.sub==='season') c.append(h('h3',{style:'margin:0 0 14px;font-size:19px'},'Les plus populaires : '+SEASON_FR[S.season.s]+' '+S.season.y));
-      else if(!S.q.trim()) c.append(h('div',{class:'chips',style:'margin:0 0 14px'},[['POPULARITY_DESC','Les plus populaires'],['TRENDING_DESC','Tendances'],['SCORE_DESC','Mieux notés']].map(([v,l])=>h('button',{class:'chip'+(S.sort===v?' on':''),'aria-pressed':String(S.sort===v),onclick:()=>{ S.sort = v; runSearch(false); }},l))));
-      c.append(h('div',{class:'grid'},S.results.map(Card)));
+      const vis = visibleResults();
+      if(!vis.length){
+        c.append(Empty('空','Aucun résultat pour ces filtres', S.more ? 'Rien dans ce lot. Charge la suite pour continuer à chercher.' : 'Essaie une autre lettre, une autre catégorie ou une autre année.',
+          S.more ? h('button',{class:'btn',onclick:()=>runSearch(true)},'Charger la suite') : null));
+        return;
+      }
+      if(S.letter) c.append(h('p',{class:'note',style:'margin:0 0 12px'},'Parmi les œuvres chargées, celles qui commencent par '+(S.letter==='#'?'un chiffre ou un symbole':S.letter)+'.'));
+      c.append(h('div',{class:'grid'},vis.map(Card)));
       if(S.more) c.append(h('button',{class:'btn ghost more',onclick:()=>runSearch(true)},'Voir plus de résultats'));
     } else {
       let list = Object.values(DB.items).filter(e=>active(e) && e.meta.type===v);
@@ -726,6 +801,7 @@ function renderContent(){
       if(f.status==='liked') list = list.filter(e=>e.liked); else if(f.status!=='all') list = list.filter(e=>e.status===f.status);
       if(f.text.trim()){ const t = norm(f.text); list = list.filter(e=>[e.meta.title,e.meta.titleRo,e.meta.titleJp,(e.tags||[]).join(' ')].some(x=>norm(x).includes(t))); }
       const sorters = { recent:(a,b)=>b.upd-a.upd, rating:(a,b)=>b.rating-a.rating||b.upd-a.upd, title:(a,b)=>a.meta.title.localeCompare(b.meta.title,'fr'), year:(a,b)=>(b.meta.year||0)-(a.meta.year||0) };
+      if(S.letter) list = list.filter(e=>matchLetter(e.meta,S.letter));
       list.sort(sorters[f.sort]);
       if(!list.length){
         c.append(Empty('空', 'Rien ici pour l’instant', v==='manga' ? 'Cherche un manga, puis note-le ou range-le sur ton étagère.' : 'Cherche une œuvre dans Explorer, puis note-la ou ajoute-la à ta liste.',
@@ -876,24 +952,51 @@ function exportBackup(){
   const a = h('a',{href:URL.createObjectURL(blob),download:`kizuna-sauvegarde-${today()}.json`}); document.body.append(a); a.click(); a.remove();
   toast('Sauvegarde exportée');
 }
-function closeQuick(){ const q = $('#pm'); if(q) q.remove(); }
-function openQuick(){
-  if($('#pm')){ closeQuick(); return; }
+function closeDrawer(){
+  const b = $('#dw'); if(!b) return;
+  b.classList.remove('open'); const d = b.querySelector('.drawer'); if(d) d.classList.remove('open');
+  document.body.style.overflow = CUR ? 'hidden' : '';
+  setTimeout(()=>{ const x = $('#dw'); if(x && !x.classList.contains('open')) x.remove(); },300);
+}
+function openDrawer(){
+  if($('#dw')){ closeDrawer(); return; }
   const P = DB.profile, all = Object.values(DB.items).filter(active);
   const n = t => all.filter(e=>e.meta.type===t && e.status==='done').length;
   const tomes = Object.values(DB.shelf).reduce((k,x)=>k+x.own.length,0);
-  const act = fn => () => { closeQuick(); fn(); };
+  const to = (v,sub) => () => { closeDrawer(); go(v,sub); };
+  const on = (v,sub) => S.view===v && (sub ? S.sub===sub : S.sub==='explore' || !TYPE[v]);
+  const link = (k,l,fn,act) => h('button',{class:'dw-item'+(act?' on':''),onclick:fn},h('i',{},k),h('span',{},l));
   const st = (v,l) => h('div',{},h('b',{},String(v)),h('span',{},l));
-  const item = (k,l,fn) => h('button',{class:'pm-item',onclick:act(fn)},h('i',{},k),h('span',{},l));
-  document.body.append(h('div',{id:'pm',class:'pm-back',onclick:ev=>{ if(ev.target.id==='pm') closeQuick(); }},
-    h('div',{class:'pmenu',role:'dialog','aria-label':'Profil rapide'},
-      h('div',{class:'pm-head'}, avatarEl(54), h('div',{},h('b',{},P.name || 'Ton pseudo'),h('small',{},P.name ? 'Ton profil Kizuna' : 'À choisir dans ton profil'))),
+  const back = h('div',{id:'dw',class:'dw-back',onclick:ev=>{ if(ev.target.id==='dw') closeDrawer(); }},
+    h('aside',{class:'drawer',role:'dialog','aria-modal':'true','aria-label':'Menu Kizuna'},
+      h('div',{class:'dw-top'},
+        h('button',{class:'dw-prof',onclick:to('profile')}, avatarEl(54), h('div',{},h('b',{},P.name || 'Ton pseudo'),h('small',{},'Voir mon profil'))),
+        h('button',{class:'dw-x','aria-label':'Fermer le menu',onclick:closeDrawer},'×')),
       h('div',{class:'pm-stats'},st(n('anime'),'animés'),st(n('film'),'films'),st(n('manga'),'mangas'),st(tomes,'tomes')),
-      item('私','Mon profil',()=>go('profile')),
-      item('十','Mon top 10',()=>{ go('profile'); openTop10(); }),
-      item('本','Ma bibliothèque de mangas',()=>go('shelf')),
-      item('彩','Changer de thème',()=>{ go('profile'); setTimeout(()=>{ const t = $('#themes'); if(t) t.scrollIntoView({behavior:'smooth',block:'center'}); },60); }),
-      item('保','Exporter ma sauvegarde',exportBackup))));
+      h('div',{class:'dw-sec'},'Explorer'),
+      link('ア','Animés',to('anime'),on('anime')),
+      link('季','Animés de la saison',to('anime','season'),on('anime','season')),
+      link('映','Films',to('film'),on('film')),
+      link('漫','Mangas',to('manga'),on('manga')),
+      link('暦','Calendrier des sorties',to('calendar'),on('calendar')),
+      h('div',{class:'dw-sec'},'Ma collection'),
+      link('私','Mon profil',to('profile'),on('profile')),
+      link('日','Mon journal',to('journal'),on('journal')),
+      link('一','Mes listes',to('lists'),on('lists')),
+      link('ア','Mes animés',to('anime','mine'),on('anime','mine')),
+      link('映','Mes films',to('film','mine'),on('film','mine')),
+      link('漫','Mes mangas notés',to('manga','mine'),on('manga','mine')),
+      link('本','Ma bibliothèque (tomes)',to('shelf'),on('shelf')),
+      h('div',{class:'dw-sec'},'Outils'),
+      link('十','Mon top 10',()=>{ closeDrawer(); go('profile'); openTop10(); }),
+      link('彩','Thèmes',()=>{ closeDrawer(); go('profile'); setTimeout(()=>{ const t = $('#themes'); if(t) t.scrollIntoView({behavior:'smooth',block:'center'}); },80); }),
+      link('保','Exporter ma sauvegarde',()=>{ closeDrawer(); exportBackup(); }),
+      h('div',{class:'dw-ver'},APP.name+' · version '+APP.version)));
+  document.body.append(back); document.body.style.overflow = 'hidden';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{ back.classList.add('open'); const d = back.querySelector('.drawer'); if(d) d.classList.add('open'); }));
+  const dr = back.querySelector('.drawer'); let x0 = null;
+  dr.addEventListener('touchstart',e=>{ x0 = e.touches[0].clientX; },{passive:true});
+  dr.addEventListener('touchend',e=>{ if(x0!==null && x0 - e.changedTouches[0].clientX > 70) closeDrawer(); x0 = null; },{passive:true});
 }
 
 /* ═════════ Favoris ═════════ */
@@ -1154,7 +1257,8 @@ function renderTop10(){
   if(rows.length) drawTop10(cv);
 }
 
-document.addEventListener('keydown',ev=>{ if(ev.key==='Escape'){ if($('#pm')) closeQuick(); else if($('#veil3')) closeFavs(); else if($('#veil2')) closeTop10(); else if(CUR) closeDetail(); } });
+document.getElementById('ver').textContent = APP.version;
+document.addEventListener('keydown',ev=>{ if(ev.key==='Escape'){ if($('#dw')) closeDrawer(); else if($('#veil3')) closeFavs(); else if($('#veil2')) closeTop10(); else if(CUR) closeDetail(); } });
 render();
 runSearch(false);
 </script>
