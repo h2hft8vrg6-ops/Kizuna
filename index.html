@@ -45,7 +45,8 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
 h1,h2,h3{font-family:var(--serif);font-weight:700;margin:0}
 
 /* ───── En-tête ───── */
-.top{display:flex;align-items:center;gap:18px;padding:18px clamp(14px,4vw,40px) 0;flex-wrap:wrap}
+.topwrap{position:sticky;top:0;z-index:30}
+.top{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px clamp(14px,4vw,40px);background:var(--ai-900);border-bottom:1px solid var(--line)}
 .brand{display:flex;align-items:center;gap:14px}
 .hanko{width:46px;height:46px;background:var(--hanko);color:#fbeee6;font-family:var(--serif);font-weight:900;font-size:32px;line-height:1;display:grid;place-items:center;border-radius:5px;transform:rotate(-4deg);box-shadow:inset 0 0 0 2px rgba(255,255,255,.22);letter-spacing:-.04em}
 .brand h1{font-size:30px;letter-spacing:.06em;line-height:1}
@@ -260,8 +261,10 @@ footer{text-align:center;color:var(--washi-dim);font-size:12.5px;padding:0 14px 
 .dw-item.on{background:var(--ai-700);box-shadow:inset 3px 0 0 var(--hanko)}
 .dw-item i{font-style:normal;font-family:var(--serif);color:var(--hanko);width:24px;text-align:center;font-size:17px}
 .dw-ver{margin-top:22px;font-size:12.5px;color:var(--washi-dim);text-align:center}
-.brand{cursor:pointer}
-.burger{font-size:22px;color:var(--washi-dim);margin-left:2px}
+.brand{min-width:0}
+.menu-btn{display:grid;gap:5px;align-content:center;justify-items:center;width:46px;height:46px;border:1px solid var(--line);border-radius:8px;background:var(--ai-800);flex:none;transition:border-color .15s}
+.menu-btn:hover{border-color:var(--kinpaku)}
+.menu-btn i{display:block;width:22px;height:2px;background:var(--washi);border-radius:2px}
 .fbar{display:grid;gap:10px;margin-bottom:12px}
 .frow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .frow select{padding:.45em .7em;max-width:100%}
@@ -291,7 +294,7 @@ footer{text-align:center;color:var(--washi-dim);font-size:12.5px;padding:0 14px 
 <script>
 'use strict';
 /* ═════════ Identité (change le nom ici) ═════════ */
-const APP = { version:'4', name:'Kizuna', kanji:'絆', tag:'Le journal de tes animés, films et mangas' };
+const APP = { version:'5', name:'Kizuna', kanji:'絆', tag:'Le journal de tes animés, films et mangas' };
 
 /* ═════════ Stockage local ═════════ */
 const KEY = 'kizuna.v1';
@@ -485,7 +488,7 @@ function mergeSources(base, jk, tm){
 }
 
 /* ═════════ État de l'interface ═════════ */
-const S = { view:'anime', sub:'explore', q:'', results:[], page:1, more:false, loading:false, src:{}, token:0,
+const S = { view:'profile', sub:'explore', q:'', results:[], page:1, more:false, loading:false, src:{}, token:0,
             filter:{ status:'all', sort:'recent', text:'' }, openList:null,
             season:curSeason(), sort:'POPULARITY_DESC', letter:'', genre:'', year:0, shelf:{ q:'', res:[], loading:false, err:false, open:{}, tok:0, dt:null }, cal:{ off:0, data:{}, loading:false, err:false, pop:true, mine:false } };
 const SEASONS = ['WINTER','SPRING','SUMMER','FALL'];
@@ -693,11 +696,10 @@ function logDiary(meta){
 
 /* ═════════ Vues ═════════ */
 function renderHeader(){
-  const items = [['anime','アニメ','Animés'],['film','映画','Films'],['manga','漫画','Mangas'],['calendar','暦','Calendrier'],['journal','日記','Journal'],['lists','一覧','Listes'],['shelf','本棚','Bibliothèque'],['profile','私','Profil']];
-  return h('div',{},
+  return h('div',{class:'topwrap'},
     h('div',{class:'top'},
-      h('div',{class:'brand',role:'button',tabindex:'0','aria-label':'Ouvrir le menu',onclick:openDrawer,onkeydown:ev=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); openDrawer(); } }}, h('div',{class:'hanko','aria-hidden':'true'},APP.kanji), h('div',{}, h('h1',{},APP.name), h('small',{},APP.tag)), h('span',{class:'burger','aria-hidden':'true'},'☰')),
-      h('nav',{'aria-label':'Navigation principale'}, items.map(([v,k,l])=>h('button',{class:S.view===v?'on':'','aria-current':S.view===v?'page':null,onclick:()=>go(v)}, h('i',{},k), h('span',{},l))))));
+      h('div',{class:'brand'}, h('div',{class:'hanko','aria-hidden':'true'},APP.kanji), h('div',{}, h('h1',{},APP.name), h('small',{},APP.tag))),
+      h('button',{class:'menu-btn','aria-label':'Ouvrir le menu',title:'Menu',onclick:openDrawer}, h('i',{}), h('i',{}), h('i',{}))));
 }
 
 function render(){
@@ -1260,7 +1262,6 @@ function renderTop10(){
 document.getElementById('ver').textContent = APP.version;
 document.addEventListener('keydown',ev=>{ if(ev.key==='Escape'){ if($('#dw')) closeDrawer(); else if($('#veil3')) closeFavs(); else if($('#veil2')) closeTop10(); else if(CUR) closeDetail(); } });
 render();
-runSearch(false);
 </script>
 </body>
 </html>
