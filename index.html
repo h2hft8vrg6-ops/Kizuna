@@ -202,7 +202,53 @@ footer{text-align:center;color:var(--washi-dim);font-size:12.5px;padding:0 14px 
 .t10row>b{font-family:var(--serif);font-size:20px;color:var(--kinpaku);text-align:center}
 .t10row .tt{font-family:var(--serif);font-size:15px;line-height:1.25}
 .row2{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.hanko{border:0;padding:0;cursor:pointer;transition:transform .15s}
+.hanko:hover{transform:rotate(0deg) scale(1.06)}
+.av{display:inline-grid;place-items:center;border-radius:50%;color:#fff;font-family:var(--serif);font-weight:700;flex:none;border:2px solid var(--line)}
+.pm-back{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.28)}
+.pmenu{position:absolute;top:78px;left:clamp(10px,3vw,36px);width:min(340px,calc(100vw - 20px));background:var(--ai-800);border:1px solid var(--line);border-radius:8px;padding:14px;box-shadow:0 14px 40px rgba(0,0,0,.45)}
+.pm-head{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+.pm-head b{font-family:var(--serif);font-size:18px;display:block}
+.pm-head small{color:var(--washi-dim)}
+.pm-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;text-align:center}
+.pm-stats div{background:var(--ai-700);border-radius:4px;padding:6px 2px}
+.pm-stats b{display:block;font-family:var(--serif);font-size:20px;line-height:1.2}
+.pm-stats span{font-size:11.5px;color:var(--washi-dim)}
+.pm-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px 8px;border-top:1px solid var(--line)}
+.pm-item:hover{background:var(--ai-700)}
+.pm-item i{font-style:normal;font-family:var(--serif);color:var(--hanko);width:24px;text-align:center;font-size:16px}
+.pcard{display:flex;gap:18px;align-items:flex-start;margin-bottom:22px;padding:18px;border:1px solid var(--line);border-radius:8px;background:var(--ai-800);flex-wrap:wrap}
+.pinfo{flex:1 1 260px;display:grid;gap:10px;min-width:0}
+.pname{font-family:var(--serif);font-size:24px;font-weight:700;background:transparent;border-color:transparent;padding:.2em .3em;width:100%}
+.pname:hover,.pname:focus{border-color:var(--line)}
+.pbio{width:100%;min-height:64px;resize:vertical}
+.avs{display:flex;gap:6px;flex-wrap:wrap}
+.avs .chip{font-family:var(--serif);font-size:17px;padding:3px 11px}
+.colr{width:28px;height:28px;border-radius:50%;border:2px solid var(--line)}
+.colr.on{border-color:var(--washi)}
+.grid.fav{grid-template-columns:repeat(auto-fill,minmax(104px,1fr));margin-bottom:12px}
+.sh{border:1px solid var(--line);border-radius:6px;background:var(--ai-800);margin-bottom:12px;overflow:hidden}
+.sh-h{display:grid;grid-template-columns:52px 1fr;gap:14px;align-items:center;padding:12px;width:100%;text-align:left}
+.sh-h .poster{width:52px}
+.sh-h h3{font-size:17px;line-height:1.25}
+.sh-h small{color:var(--washi-dim)}
+.pbar{height:7px;background:var(--empty);border-radius:4px;margin-top:8px;position:relative;overflow:hidden}
+.pbar i{position:absolute;left:0;top:0;bottom:0}
+.pbar .o{background:var(--ai-500)}
+.pbar .r{background:var(--kinpaku)}
+.sh-b{padding:4px 14px 16px;border-top:1px solid var(--line)}
+.tomes{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0}
+.tome{width:44px;height:44px;border:1px solid var(--line);border-radius:4px;font-family:var(--serif);font-size:16px;color:var(--washi-dim);position:relative}
+.tome.own{background:var(--ai-600);border-color:var(--ai-500);color:var(--washi)}
+.tome.read{background:var(--kinpaku);border-color:var(--kinpaku);color:var(--ai-900);font-weight:700}
+.tome.read::after{content:"✓";position:absolute;right:4px;top:1px;font-size:11px}
+.srow{display:grid;grid-template-columns:46px 1fr auto;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.srow .poster{width:46px}
+.pill{font-size:12.5px;border:1px solid var(--kinpaku);color:var(--kinpaku);padding:1px 10px;border-radius:999px;white-space:nowrap}
 @media (max-width:640px){
+  nav{flex-wrap:wrap;overflow:visible;margin-left:0;width:100%}
+  nav button{flex:1 1 21%;padding:6px 2px 7px}
+  nav button span{font-size:12px}
   .vert{writing-mode:horizontal-tb;font-size:26px;height:auto;margin:0 0 -4px;letter-spacing:.06em}
   .head{gap:6px 14px;align-items:flex-start}
   .body{grid-template-columns:120px 1fr;gap:14px;padding:0 14px 18px;margin-top:-60px}
@@ -210,7 +256,6 @@ footer{text-align:center;color:var(--washi-dim);font-size:12.5px;padding:0 14px 
   .body h2{font-size:21px}
   .entry{grid-template-columns:36px 46px 1fr;}
   .entry>:last-child{grid-column:3}
-  nav{margin-left:0;width:100%}
   .tabs{margin-left:0}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}html{scroll-behavior:auto}}
@@ -228,9 +273,9 @@ const APP = { name:'Kizuna', kanji:'絆', tag:'Le journal de tes animés, films 
 /* ═════════ Stockage local ═════════ */
 const KEY = 'kizuna.v1';
 let mem = null;
-const defaults = () => ({ items:{}, diary:[], lists:[], settings:{ tmdb:'', jikan:true, theme:'indigo' } });
+const defaults = () => ({ items:{}, diary:[], lists:[], shelf:{}, profile:{ name:'', bio:'', avatar:'絆', color:'#c8402f', favs:[] }, settings:{ tmdb:'', jikan:true, theme:'indigo' } });
 function load(){
-  try{ const r = localStorage.getItem(KEY); if(r){ const d = JSON.parse(r); return Object.assign(defaults(), d, { settings:Object.assign(defaults().settings, d.settings||{}) }); } }catch(e){}
+  try{ const r = localStorage.getItem(KEY); if(r){ const d = JSON.parse(r); return Object.assign(defaults(), d, { settings:Object.assign(defaults().settings, d.settings||{}), profile:Object.assign(defaults().profile, d.profile||{}) }); } }catch(e){}
   return mem || defaults();
 }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(DB)); }catch(e){ mem = DB; } }
@@ -325,7 +370,7 @@ async function anilist(scope, q, page, custom){
     const fmt = scope==='film' ? 'format:MOVIE' : scope==='anime' ? 'format_not_in:[MOVIE]' : 'format_in:[MANGA,ONE_SHOT]';
     const type = scope==='manga' ? 'MANGA' : 'ANIME';
     decl = q ? '$s:String,$p:Int' : '$p:Int';
-    args = `type:${type} ${fmt} isAdult:false ${q ? 'search:$s sort:SEARCH_MATCH' : 'sort:TRENDING_DESC'}`;
+    args = `type:${type} ${fmt} isAdult:false ${q ? 'search:$s sort:SEARCH_MATCH' : 'sort:'+S.sort+(S.sort==='SCORE_DESC' ? ' popularity_greater:10000' : '')}`;
     vars = q ? { s:q, p:page } : { p:page };
   }
   const data = await alPost(`query(${decl}){Page(page:$p,perPage:24){pageInfo{hasNextPage} media(${args}){${AL_FIELDS}}}}`, vars);
@@ -399,7 +444,7 @@ function mergeSources(base, jk, tm){
 /* ═════════ État de l'interface ═════════ */
 const S = { view:'anime', sub:'explore', q:'', results:[], page:1, more:false, loading:false, src:{}, token:0,
             filter:{ status:'all', sort:'recent', text:'' }, openList:null,
-            season:curSeason(), cal:{ off:0, data:{}, loading:false, err:false, pop:true, mine:false } };
+            season:curSeason(), sort:'POPULARITY_DESC', shelf:{ q:'', res:[], loading:false, err:false, open:{}, tok:0, dt:null }, cal:{ off:0, data:{}, loading:false, err:false, pop:true, mine:false } };
 const SEASONS = ['WINTER','SPRING','SUMMER','FALL'];
 const SEASON_FR = { WINTER:'Hiver', SPRING:'Printemps', SUMMER:'Été', FALL:'Automne' };
 function curSeason(){ const d = new Date(); return { s:['WINTER','SPRING','SUMMER','FALL'][Math.floor(d.getMonth()/3)], y:d.getFullYear() }; }
@@ -538,6 +583,11 @@ function renderDetail(){
         const en = ensure(meta); DB.lists.push({ id:uid(), name:n, desc:'', keys:[meta.key] }); touch(en); refresh();
       }},'+ Nouvelle liste')));
 
+  const sh = DB.shelf[meta.key];
+  const shelfRow = isManga ? h('div',{class:'row'}, h('label',{},'Bibliothèque'),
+    sh ? h('div',{class:'row'}, h('span',{class:'note'},'Dans ta bibliothèque : '+sh.own.length+' tome'+(sh.own.length>1?'s':'')+' possédé'+(sh.own.length>1?'s':'')),
+        h('button',{class:'btn ghost sm',onclick:()=>{ S.shelf.open[meta.key] = true; closeDetail(); go('shelf'); }},'Gérer les tomes'))
+       : h('button',{class:'btn ghost sm',onclick:()=>{ addShelf(meta); toast('Ajouté à ta bibliothèque'); refresh(); }},'Ajouter à ma bibliothèque')) : null;
   const veil = h('div',{id:'veil',class:'veil',onclick:ev=>{ if(ev.target.id==='veil') closeDetail(); }},
     h('div',{class:'sheet',role:'dialog','aria-modal':'true','aria-label':title},
       h('button',{class:'x','aria-label':'Fermer',onclick:closeDetail},'×'),
@@ -570,6 +620,7 @@ function renderDetail(){
             h('input',{type:'text',placeholder:'Étiquettes : mécha, cosy, à revoir…',value:(e.tags||[]).join(', '),style:'flex:1 1 220px',onchange:ev=>{ const en = ensure(meta); en.tags = ev.target.value.split(',').map(s=>s.trim()).filter(Boolean); touch(en); }})),
           h('textarea',{placeholder:'Ta critique (visible seulement par toi)…',oninput:ev=>{ const en = ensure(meta); en.review = ev.target.value; en.upd = Date.now(); save(); },onblur:()=>{ const en=E(meta.key); if(en) { touch(en); } }},e.review||''),
           lists,
+          shelfRow,
           h('div',{class:'row'},
             h('button',{class:'btn',onclick:()=>logDiary(meta)},isManga?'Ajouter au journal de lecture':'Ajouter au journal'),
             E(meta.key) && active(E(meta.key)) ? h('button',{class:'btn ghost',onclick:()=>{
@@ -596,10 +647,10 @@ function logDiary(meta){
 
 /* ═════════ Vues ═════════ */
 function renderHeader(){
-  const items = [['anime','アニメ','Animés'],['film','映画','Films'],['manga','漫画','Mangas'],['calendar','暦','Calendrier'],['journal','日記','Journal'],['lists','一覧','Listes'],['profile','私','Profil']];
+  const items = [['anime','アニメ','Animés'],['film','映画','Films'],['manga','漫画','Mangas'],['calendar','暦','Calendrier'],['journal','日記','Journal'],['lists','一覧','Listes'],['shelf','本棚','Bibliothèque'],['profile','私','Profil']];
   return h('div',{},
     h('div',{class:'top'},
-      h('div',{class:'brand'}, h('div',{class:'hanko','aria-hidden':'true'},APP.kanji), h('div',{}, h('h1',{},APP.name), h('small',{},APP.tag))),
+      h('div',{class:'brand'}, h('button',{class:'hanko','aria-label':'Profil rapide',title:'Profil rapide',onclick:openQuick},APP.kanji), h('div',{}, h('h1',{},APP.name), h('small',{},APP.tag))),
       h('nav',{'aria-label':'Navigation principale'}, items.map(([v,k,l])=>h('button',{class:S.view===v?'on':'','aria-current':S.view===v?'page':null,onclick:()=>go(v)}, h('i',{},k), h('span',{},l))))));
 }
 
@@ -666,7 +717,7 @@ function renderContent(){
         return;
       }
       if(S.sub==='season') c.append(h('h3',{style:'margin:0 0 14px;font-size:19px'},'Les plus populaires : '+SEASON_FR[S.season.s]+' '+S.season.y));
-      else if(!S.q.trim()) c.append(h('h3',{style:'margin:0 0 14px;font-size:19px'},'Tendances du moment'));
+      else if(!S.q.trim()) c.append(h('div',{class:'chips',style:'margin:0 0 14px'},[['POPULARITY_DESC','Les plus populaires'],['TRENDING_DESC','Tendances'],['SCORE_DESC','Mieux notés']].map(([v,l])=>h('button',{class:'chip'+(S.sort===v?' on':''),'aria-pressed':String(S.sort===v),onclick:()=>{ S.sort = v; runSearch(false); }},l))));
       c.append(h('div',{class:'grid'},S.results.map(Card)));
       if(S.more) c.append(h('button',{class:'btn ghost more',onclick:()=>runSearch(true)},'Voir plus de résultats'));
     } else {
@@ -685,6 +736,7 @@ function renderContent(){
     }
     return;
   }
+  if(v==='shelf') return viewShelf(c);
   if(v==='calendar') return viewCalendar(c);
   if(v==='journal') return viewJournal(c);
   if(v==='lists') return viewLists(c);
@@ -740,7 +792,16 @@ function viewLists(c){
 }
 
 function viewProfile(c){
-  c.append(sectionHead('私','Profil','Ce que tu as regardé, lu et aimé.'));
+  const P = DB.profile, favs = P.favs.map(metaOf).filter(Boolean);
+  c.append(h('div',{class:'pcard'}, avatarEl(88),
+    h('div',{class:'pinfo'},
+      h('input',{type:'text',class:'pname',placeholder:'Choisis ton pseudo',value:P.name,maxlength:'24','aria-label':'Pseudo',oninput:ev=>{ P.name = ev.target.value; save(); }}),
+      h('textarea',{class:'pbio',placeholder:'Ta bio : ton anime de chevet, ta saison préférée…',maxlength:'160','aria-label':'Bio',oninput:ev=>{ P.bio = ev.target.value; save(); }},P.bio||''),
+      h('div',{class:'avs','aria-label':'Avatar'},AVATARS.map(a=>h('button',{class:'chip'+(P.avatar===a?' on':''),onclick:()=>{ P.avatar = a; save(); renderContent(); }},a))),
+      h('div',{class:'avs','aria-label':'Couleur'},AVCOLORS.map(col=>h('button',{class:'colr'+(P.color===col?' on':''),style:'background:'+col,'aria-label':'Couleur '+col,onclick:()=>{ P.color = col; save(); renderContent(); }}))))));
+  c.append(h('div',{class:'sec',style:'margin-bottom:26px'},h('h3',{},'Mes favoris'),
+    favs.length ? h('div',{class:'grid fav'},favs.map(Card)) : h('p',{class:'note',style:'margin:0 0 12px'},'Choisis les 4 œuvres qui te représentent le mieux.'),
+    h('button',{class:'btn ghost sm',onclick:openFavs},favs.length?'Modifier mes favoris':'Choisir mes favoris')));
   const all = Object.values(DB.items).filter(active);
   const of = t => all.filter(e=>e.meta.type===t);
   const done = t => of(t).filter(e=>e.status==='done').length;
@@ -759,7 +820,8 @@ function viewProfile(c){
     h('div',{class:'stat'},h('b',{},String(done('manga'))),h('span',{},'mangas lus')),
     h('div',{class:'stat'},h('b',{},Math.round(minutes/60)+' h'),h('span',{},'devant l’écran (estimation)')),
     h('div',{class:'stat'},h('b',{},String(chapters)),h('span',{},'chapitres lus')),
-    h('div',{class:'stat'},h('b',{},rated.length ? avg.toFixed(2) : '—'),h('span',{},'note moyenne sur 5'))));
+    h('div',{class:'stat'},h('b',{},rated.length ? avg.toFixed(2) : '—'),h('span',{},'note moyenne sur 5')),
+    h('div',{class:'stat'},h('b',{},String(Object.values(DB.shelf).reduce((n,x)=>n+x.own.length,0))),h('span',{},'tomes possédés'))));
 
   const dist = Array.from({length:10},(_,i)=>rated.filter(e=>e.rating===(i+1)/2).length);
   const mx = Math.max(1,...dist);
@@ -781,7 +843,7 @@ function viewProfile(c){
     h('p',{class:'note',style:'margin:0 0 12px'},'Crée une image de tes 10 œuvres préférées, prête à partager.'),
     h('button',{class:'btn',onclick:openTop10},'Créer mon top 10')));
   const THEMES = [['indigo','Indigo','#0b1524','#c8402f','#dcb15a'],['grandline','Grand Line','#06202f','#d9402e','#f0c04e'],['plusultra','Plus Ultra','#07140f','#e0352b','#f5c52b'],['sakura','Sakura (clair)','#f6efe3','#c0392b','#c8921f'],['sumi','Sumi (noir)','#0a0a0a','#d8352a','#e0b84c']];
-  c.append(h('div',{class:'sec',style:'margin-bottom:26px'},h('h3',{},'Thèmes'),
+  c.append(h('div',{id:'themes',class:'sec',style:'margin-bottom:26px'},h('h3',{},'Thèmes'),
     h('div',{class:'themes'},THEMES.map(([id,name,a,b,g])=>h('button',{class:'theme'+((DB.settings.theme||'indigo')===id?' on':''),'aria-pressed':String((DB.settings.theme||'indigo')===id),onclick:()=>{ DB.settings.theme = id; save(); applyTheme(); renderContent(); }},
       h('div',{class:'sw'},[a,b,g].map(col=>h('i',{style:'background:'+col}))), h('span',{},name))))));
 
@@ -799,14 +861,147 @@ function viewProfile(c){
     h('div',{class:'setrow'}, tmdbIn, h('button',{class:'btn ghost sm',onclick:()=>{ DB.settings.tmdb = tmdbIn.value.trim(); save(); toast(DB.settings.tmdb?'Clé TMDB enregistrée':'TMDB désactivé'); }},'Enregistrer')),
     h('p',{class:'note'},'TMDB ajoute les titres et synopsis en français. Crée une clé gratuite sur themoviedb.org, elle reste uniquement sur cet appareil.'),
     h('div',{class:'setrow'},
-      h('button',{class:'btn',onclick:()=>{
-        const blob = new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
-        const a = h('a',{href:URL.createObjectURL(blob),download:`kizuna-sauvegarde-${today()}.json`}); document.body.append(a); a.click(); a.remove();
-      }},'Exporter ma collection'),
+      h('button',{class:'btn',onclick:exportBackup},'Exporter ma collection'),
       h('button',{class:'btn ghost',onclick:()=>file.click()},'Importer une sauvegarde'), file,
       h('button',{class:'btn ghost',onclick:()=>{ if(confirm('Effacer toute ta collection, ton journal et tes listes ? Cette action est définitive.')){ DB = defaults(); save(); render(); } }},'Tout effacer'))));
 }
 
+
+/* ═════════ Profil rapide (logo) ═════════ */
+const AVATARS = ['絆','侍','桜','龍','海','炎','雷','月','星','剣','鬼','空'];
+const AVCOLORS = ['#c8402f','#dcb15a','#2f7a8a','#4a7c59','#5b4b8a','#37577f','#8a4b6a','#444444'];
+function avatarEl(size){ const P = DB.profile; return h('span',{class:'av',style:`background:${P.color};width:${size}px;height:${size}px;font-size:${Math.round(size*.52)}px`},P.avatar||'絆'); }
+function exportBackup(){
+  const blob = new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+  const a = h('a',{href:URL.createObjectURL(blob),download:`kizuna-sauvegarde-${today()}.json`}); document.body.append(a); a.click(); a.remove();
+  toast('Sauvegarde exportée');
+}
+function closeQuick(){ const q = $('#pm'); if(q) q.remove(); }
+function openQuick(){
+  if($('#pm')){ closeQuick(); return; }
+  const P = DB.profile, all = Object.values(DB.items).filter(active);
+  const n = t => all.filter(e=>e.meta.type===t && e.status==='done').length;
+  const tomes = Object.values(DB.shelf).reduce((k,x)=>k+x.own.length,0);
+  const act = fn => () => { closeQuick(); fn(); };
+  const st = (v,l) => h('div',{},h('b',{},String(v)),h('span',{},l));
+  const item = (k,l,fn) => h('button',{class:'pm-item',onclick:act(fn)},h('i',{},k),h('span',{},l));
+  document.body.append(h('div',{id:'pm',class:'pm-back',onclick:ev=>{ if(ev.target.id==='pm') closeQuick(); }},
+    h('div',{class:'pmenu',role:'dialog','aria-label':'Profil rapide'},
+      h('div',{class:'pm-head'}, avatarEl(54), h('div',{},h('b',{},P.name || 'Ton pseudo'),h('small',{},P.name ? 'Ton profil Kizuna' : 'À choisir dans ton profil'))),
+      h('div',{class:'pm-stats'},st(n('anime'),'animés'),st(n('film'),'films'),st(n('manga'),'mangas'),st(tomes,'tomes')),
+      item('私','Mon profil',()=>go('profile')),
+      item('十','Mon top 10',()=>{ go('profile'); openTop10(); }),
+      item('本','Ma bibliothèque de mangas',()=>go('shelf')),
+      item('彩','Changer de thème',()=>{ go('profile'); setTimeout(()=>{ const t = $('#themes'); if(t) t.scrollIntoView({behavior:'smooth',block:'center'}); },60); }),
+      item('保','Exporter ma sauvegarde',exportBackup))));
+}
+
+/* ═════════ Favoris ═════════ */
+function openFavs(){ renderFavs(); document.body.style.overflow = 'hidden'; }
+function closeFavs(){ const v = $('#veil3'); if(v) v.remove(); document.body.style.overflow = CUR ? 'hidden' : ''; if(S.view==='profile') renderContent(); }
+function renderFavs(){
+  const old = $('#veil3'), top = old ? old.scrollTop : 0; if(old) old.remove();
+  const P = DB.profile;
+  const list = Object.values(DB.items).filter(active).sort((a,b)=>(b.rating||0)-(a.rating||0) || b.upd-a.upd);
+  const v = h('div',{id:'veil3',class:'veil',onclick:ev=>{ if(ev.target.id==='veil3') closeFavs(); }},
+    h('div',{class:'sheet t10',role:'dialog','aria-modal':'true','aria-label':'Mes favoris'},
+      h('button',{class:'x','aria-label':'Fermer',onclick:closeFavs},'×'),
+      h('h2',{},'Mes favoris'),
+      h('p',{class:'note'},'Choisis jusqu’à 4 œuvres ('+P.favs.length+'/4).'),
+      list.length ? h('div',{class:'grid',style:'margin-top:14px'},list.map(e=>{
+        const k = e.meta.key, on = P.favs.includes(k), pst = Poster(e.meta);
+        if(on) pst.append(h('div',{class:'ribbon'},h('b',{},'Favori'),h('span',{class:'heart'},'♥')));
+        return h('button',{class:'card','aria-pressed':String(on),onclick:()=>{
+          if(on) P.favs = P.favs.filter(x=>x!==k); else if(P.favs.length<4) P.favs.push(k); else { toast('4 favoris maximum'); return; }
+          save(); renderFavs(); }}, pst, h('div',{class:'t'},e.meta.title)); }))
+        : h('p',{class:'note',style:'margin-top:14px'},'Ajoute d’abord des œuvres à ta collection : note-les ou range-les dans une liste.'),
+      h('div',{class:'row2',style:'margin-top:18px'},h('button',{class:'btn',onclick:closeFavs},'Terminé'))));
+  document.body.append(v); v.scrollTop = top;
+}
+
+/* ═════════ Bibliothèque de mangas (tome par tome) ═════════ */
+function addShelf(meta){
+  if(DB.shelf[meta.key]) return;
+  DB.shelf[meta.key] = { meta, total:meta.volumes||0, own:[], read:[], added:Date.now() };
+  save();
+}
+function cycleTome(sh,n){
+  if(!sh.own.includes(n)) sh.own.push(n);
+  else if(!sh.read.includes(n)) sh.read.push(n);
+  else { sh.own = sh.own.filter(x=>x!==n); sh.read = sh.read.filter(x=>x!==n); }
+  save();
+}
+async function shelfSearch(){
+  const sh = S.shelf, my = ++sh.tok, q = sh.q.trim();
+  sh.err = false;
+  if(!q){ sh.res = []; sh.loading = false; renderShelfRes(); return; }
+  sh.loading = true; renderShelfRes();
+  try{ const r = await anilist('manga',q,1); if(my!==sh.tok) return; sh.res = r.list; }
+  catch(e){ if(my!==sh.tok) return; sh.res = []; sh.err = true; }
+  sh.loading = false; renderShelfRes();
+}
+function renderShelfRes(){
+  const d = $('#shres'); if(!d) return; d.replaceChildren();
+  const sh = S.shelf;
+  if(sh.loading){ d.append(h('p',{class:'note'},h('i',{class:'spin'}),'Recherche…')); return; }
+  if(sh.err){ d.append(h('p',{class:'note'},'Recherche impossible : vérifie ta connexion et réessaie.')); return; }
+  if(!sh.q.trim()) return;
+  if(!sh.res.length){ d.append(h('p',{class:'note'},'Aucun manga trouvé. Essaie le titre en romaji ou en anglais.')); return; }
+  sh.res.slice(0,8).forEach(m=>{
+    const have = !!DB.shelf[m.key];
+    d.append(h('div',{class:'srow'},
+      h('button',{class:'card','aria-label':m.title,onclick:()=>openDetail(m)},Poster(m)),
+      h('div',{}, h('div',{style:'font-family:var(--serif)'},m.title), h('small',{class:'note'},[m.year, m.volumes ? m.volumes+' tomes' : 'nombre de tomes inconnu'].filter(Boolean).join('   '))),
+      have ? h('span',{class:'pill'},'Ajouté') : h('button',{class:'btn sm',onclick:()=>{ addShelf(m); S.shelf.open[m.key] = true; S.shelf.q = ''; S.shelf.res = []; toast('Ajouté à ta bibliothèque'); renderContent(); }},'Ajouter')));
+  });
+}
+function ShelfPanel(sh){
+  const m = sh.meta, k = m.key, open = !!S.shelf.open[k];
+  const total = Math.max(sh.total||0, ...sh.own, ...sh.read, 0);
+  const pct = n => total ? Math.round(n/total*100) : 0;
+  const upd = () => { save(); renderContent(); };
+  const head = h('button',{class:'sh-h','aria-expanded':String(open),onclick:()=>{ S.shelf.open[k] = !open; renderContent(); }},
+    Poster(m),
+    h('div',{}, h('h3',{},m.title),
+      h('small',{},sh.own.length+(total?' sur '+total:'')+' tome'+(sh.own.length>1?'s':'')+' possédé'+(sh.own.length>1?'s':'')+'   '+sh.read.length+' lu'+(sh.read.length>1?'s':'')),
+      h('div',{class:'pbar'},h('i',{class:'o',style:`width:${pct(sh.own.length)}%`}),h('i',{class:'r',style:`width:${pct(sh.read.length)}%`}))));
+  const panel = h('div',{class:'sh'},head);
+  if(open){
+    const tomes = [];
+    for(let n=1;n<=total;n++){
+      const o = sh.own.includes(n), r = sh.read.includes(n);
+      tomes.push(h('button',{class:'tome'+(o?' own':'')+(r?' read':''),'aria-label':'Tome '+n+(r?' : lu':o?' : possédé':' : manquant'),onclick:()=>{ cycleTome(sh,n); renderContent(); }},String(n)));
+    }
+    panel.append(h('div',{class:'sh-b'},
+      total ? [h('p',{class:'note',style:'margin:12px 0 0'},'Un appui : possédé. Deux appuis : lu. Trois appuis : retiré.'), h('div',{class:'tomes'},tomes)]
+            : h('p',{class:'note',style:'margin:14px 0'},'Le nombre de tomes n’est pas connu pour cette série. Ajoute-les avec « + 1 tome ».'),
+      h('div',{class:'row',style:'margin-bottom:12px'},
+        h('label',{},'Tomes parus'),
+        h('input',{type:'number',min:0,max:999,value:total,style:'width:84px;text-align:center','aria-label':'Nombre de tomes',onchange:ev=>{ sh.total = Math.max(0,parseInt(ev.target.value,10)||0); if(sh.total<Math.max(0,...sh.own,...sh.read)){ sh.total = Math.max(0,...sh.own,...sh.read); } upd(); }}),
+        h('button',{class:'btn ghost sm',onclick:()=>{ sh.total = total+1; upd(); }},'+ 1 tome')),
+      h('div',{class:'row'},
+        h('button',{class:'btn ghost sm',onclick:()=>{ sh.own = Array.from({length:total},(_,i)=>i+1); upd(); }},'Tout possédé'),
+        h('button',{class:'btn ghost sm',onclick:()=>{ sh.own = Array.from({length:total},(_,i)=>i+1); sh.read = sh.own.slice(); upd(); }},'Tout lu'),
+        h('button',{class:'btn ghost sm',onclick:()=>{ sh.own = []; sh.read = []; upd(); }},'Vider'),
+        h('button',{class:'btn ghost sm',onclick:()=>openDetail(m)},'Fiche et note'),
+        h('button',{class:'btn ghost sm',onclick:()=>{ if(confirm('Retirer « '+m.title+' » de ta bibliothèque ?')){ delete DB.shelf[k]; save(); renderContent(); } }},'Retirer'))));
+  }
+  return panel;
+}
+function viewShelf(c){
+  c.append(sectionHead('本棚','Bibliothèque','Ta collection de mangas, tome par tome.'));
+  const items = Object.values(DB.shelf).sort((a,b)=>b.added-a.added);
+  const owned = items.reduce((n,x)=>n+x.own.length,0), read = items.reduce((n,x)=>n+x.read.length,0);
+  const stat = (v,l) => h('div',{class:'stat'},h('b',{},String(v)),h('span',{},l));
+  c.append(h('div',{class:'stats'},stat(items.length,'séries'),stat(owned,'tomes possédés'),stat(read,'tomes lus')));
+  c.append(h('div',{class:'search'},h('input',{type:'search',placeholder:'Ajouter un manga (Naruto, Solo Leveling, Jujutsu Kaisen…)',value:S.shelf.q,'aria-label':'Ajouter un manga à la bibliothèque',
+    oninput:ev=>{ S.shelf.q = ev.target.value; clearTimeout(S.shelf.dt); S.shelf.dt = setTimeout(shelfSearch,450); },
+    onkeydown:ev=>{ if(ev.key==='Enter'){ clearTimeout(S.shelf.dt); shelfSearch(); } }})));
+  c.append(h('div',{id:'shres',style:'margin-bottom:18px'}));
+  renderShelfRes();
+  if(!items.length){ c.append(Empty('本','Ta bibliothèque est vide','Cherche un manga ci-dessus, ou ouvre une fiche depuis l’onglet Mangas et ajoute-la ici.')); return; }
+  items.forEach(sh=>c.append(ShelfPanel(sh)));
+}
 
 /* ═════════ Calendrier des sorties ═════════ */
 function weekStart(off){ const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - ((d.getDay()+6)%7) + off*7); return d; }
@@ -959,7 +1154,7 @@ function renderTop10(){
   if(rows.length) drawTop10(cv);
 }
 
-document.addEventListener('keydown',ev=>{ if(ev.key==='Escape'){ if($('#veil2')) closeTop10(); else if(CUR) closeDetail(); } });
+document.addEventListener('keydown',ev=>{ if(ev.key==='Escape'){ if($('#pm')) closeQuick(); else if($('#veil3')) closeFavs(); else if($('#veil2')) closeTop10(); else if(CUR) closeDetail(); } });
 render();
 runSearch(false);
 </script>
