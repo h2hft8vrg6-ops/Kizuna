@@ -271,6 +271,29 @@ footer{text-align:center;color:var(--washi-dim);font-size:12.5px;padding:0 14px 
 .letters{display:flex;flex-wrap:wrap;gap:4px}
 .lt{min-width:30px;height:30px;padding:0 7px;border:1px solid var(--line);border-radius:4px;font-family:var(--serif);font-size:14px;color:var(--washi-dim)}
 .lt.on{background:var(--washi);color:var(--ai-900);border-color:var(--washi);font-weight:700}
+.acc{display:flex;gap:10px 14px;align-items:center;flex-wrap:wrap;margin-bottom:18px;padding:14px 18px;border:1px solid var(--line);border-radius:8px;background:var(--ai-800)}
+.acc .grow{flex:1 1 220px;min-width:0}
+.acc b{font-family:var(--serif);font-size:17px;display:block}
+.acc small{color:var(--washi-dim);display:block;word-break:break-all}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;background:var(--empty)}
+.dot.ok{background:#4fbf8a}.dot.sync{background:var(--kinpaku)}.dot.err{background:var(--hanko)}
+.fld{display:grid;gap:6px;margin-bottom:12px}
+.fld label{font-size:13.5px;color:var(--washi-dim)}
+.fld input{width:100%;font-size:16px}
+.msg{padding:9px 12px;border-radius:6px;font-size:14px;margin-bottom:12px;border:1px solid var(--line)}
+.msg.err{border-color:var(--hanko);color:var(--hanko)}
+.msg.ok{border-color:var(--asagi);color:var(--asagi)}
+.linkbtn{color:var(--asagi);text-decoration:underline;font-size:14px}
+.legal h2{font-size:24px;padding-right:44px;margin-bottom:2px}
+.legal h3{font-size:18px;margin:22px 0 6px;color:var(--kinpaku)}
+.legal p,.legal li{color:var(--text2);margin:6px 0;line-height:1.6}
+.legal ul{padding-left:20px;margin:6px 0}
+.legal .upd{color:var(--washi-dim);font-size:13px;margin:0 0 4px}
+.todo{background:var(--hanko);color:#fff;border-radius:3px;padding:0 6px;font-size:.92em;white-space:normal}
+.chk{display:flex;gap:10px;align-items:flex-start;margin:0 0 10px;font-size:14px;color:var(--washi-dim);line-height:1.45}
+.chk input{width:auto;margin-top:3px;flex:none}
+.flinks{display:flex;gap:6px 16px;flex-wrap:wrap;justify-content:center;margin-bottom:8px}
+.flinks .linkbtn{font-size:13px}
 @media (max-width:640px){
   nav{flex-wrap:wrap;overflow:visible;margin-left:0;width:100%}
   nav button{flex:1 1 21%;padding:6px 2px 7px}
@@ -289,12 +312,12 @@ footer{text-align:center;color:var(--washi-dim);font-size:12.5px;padding:0 14px 
 </head>
 <body>
 <div id="app"></div>
-<footer>Kizuna · version <span id="ver"></span> · Données fournies par AniList, MyAnimeList (via Jikan) et TMDB. Ta collection reste enregistrée sur cet appareil.</footer>
+<footer><div id="legal-links" class="flinks"></div>Kizuna · version <span id="ver"></span> · Données fournies par AniList, MyAnimeList (via Jikan) et TMDB. Ta collection reste enregistrée sur cet appareil.</footer>
 
 <script>
 'use strict';
 /* ═════════ Identité (change le nom ici) ═════════ */
-const APP = { version:'5', name:'Kizuna', kanji:'絆', tag:'Le journal de tes animés, films et mangas' };
+const APP = { version:'7', name:'Kizuna', kanji:'絆', tag:'Le journal de tes animés, films et mangas' };
 
 /* ═════════ Stockage local ═════════ */
 const KEY = 'kizuna.v1';
@@ -304,7 +327,8 @@ function load(){
   try{ const r = localStorage.getItem(KEY); if(r){ const d = JSON.parse(r); return Object.assign(defaults(), d, { settings:Object.assign(defaults().settings, d.settings||{}), profile:Object.assign(defaults().profile, d.profile||{}) }); } }catch(e){}
   return mem || defaults();
 }
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(DB)); }catch(e){ mem = DB; } }
+function saveLocal(){ try{ localStorage.setItem(KEY, JSON.stringify(DB)); }catch(e){ mem = DB; } }
+function save(){ DB.updatedAt = Date.now(); saveLocal(); try{ scheduleSync(); }catch(e){} }
 let DB = load();
 function applyTheme(){
   document.documentElement.setAttribute('data-theme', DB.settings.theme || 'indigo');
@@ -870,6 +894,7 @@ function viewLists(c){
 }
 
 function viewProfile(c){
+  c.append(accountCard());
   const P = DB.profile, favs = P.favs.map(metaOf).filter(Boolean);
   c.append(h('div',{class:'pcard'}, avatarEl(88),
     h('div',{class:'pinfo'},
@@ -941,7 +966,11 @@ function viewProfile(c){
     h('div',{class:'setrow'},
       h('button',{class:'btn',onclick:exportBackup},'Exporter ma collection'),
       h('button',{class:'btn ghost',onclick:()=>file.click()},'Importer une sauvegarde'), file,
-      h('button',{class:'btn ghost',onclick:()=>{ if(confirm('Effacer toute ta collection, ton journal et tes listes ? Cette action est définitive.')){ DB = defaults(); save(); render(); } }},'Tout effacer'))));
+      h('button',{class:'btn ghost',onclick:()=>{ if(confirm('Effacer toute ta collection, ton journal et tes listes ? Cette action est définitive.')){ DB = defaults(); save(); render(); } }},'Tout effacer')),
+    CS.session ? h('div',{class:'setrow'},
+      h('button',{class:'btn ghost',onclick:deleteCloudData},'Supprimer mes données en ligne'),
+      h('button',{class:'btn ghost',onclick:deleteAccount},'Supprimer mon compte'),
+      h('p',{class:'note',style:'margin:0'},'« Supprimer mes données en ligne » efface la copie de ta collection dans ton compte. « Supprimer mon compte » efface le compte, ton email et toutes tes données en ligne, définitivement. Ta collection sur cet appareil n’est pas touchée.')) : null));
 }
 
 
@@ -972,7 +1001,7 @@ function openDrawer(){
   const back = h('div',{id:'dw',class:'dw-back',onclick:ev=>{ if(ev.target.id==='dw') closeDrawer(); }},
     h('aside',{class:'drawer',role:'dialog','aria-modal':'true','aria-label':'Menu Kizuna'},
       h('div',{class:'dw-top'},
-        h('button',{class:'dw-prof',onclick:to('profile')}, avatarEl(54), h('div',{},h('b',{},P.name || 'Ton pseudo'),h('small',{},'Voir mon profil'))),
+        h('button',{class:'dw-prof',onclick:to('profile')}, avatarEl(54), h('div',{},h('b',{},P.name || 'Ton pseudo'),h('small',{},CS.session ? CS.session.user.email : 'Voir mon profil'))),
         h('button',{class:'dw-x','aria-label':'Fermer le menu',onclick:closeDrawer},'×')),
       h('div',{class:'pm-stats'},st(n('anime'),'animés'),st(n('film'),'films'),st(n('manga'),'mangas'),st(tomes,'tomes')),
       h('div',{class:'dw-sec'},'Explorer'),
@@ -992,7 +1021,13 @@ function openDrawer(){
       h('div',{class:'dw-sec'},'Outils'),
       link('十','Mon top 10',()=>{ closeDrawer(); go('profile'); openTop10(); }),
       link('彩','Thèmes',()=>{ closeDrawer(); go('profile'); setTimeout(()=>{ const t = $('#themes'); if(t) t.scrollIntoView({behavior:'smooth',block:'center'}); },80); }),
+      link('鍵','Mon compte (sauvegarde en ligne)',()=>{ closeDrawer(); go('profile'); setTimeout(()=>{ const t = $('#account'); if(t) t.scrollIntoView({behavior:'smooth',block:'center'}); },80); }),
       link('保','Exporter ma sauvegarde',()=>{ closeDrawer(); exportBackup(); }),
+      h('div',{class:'dw-sec'},'Informations'),
+      link('法','Mentions légales',()=>{ closeDrawer(); openLegal('mentions-legales'); }),
+      link('守','Confidentialité et données',()=>{ closeDrawer(); openLegal('confidentialite'); }),
+      link('約','Conditions d’utilisation',()=>{ closeDrawer(); openLegal('cgu'); }),
+      link('謝','Crédits et sources',()=>{ closeDrawer(); openLegal('credits'); }),
       h('div',{class:'dw-ver'},APP.name+' · version '+APP.version)));
   document.body.append(back); document.body.style.overflow = 'hidden';
   requestAnimationFrame(()=>requestAnimationFrame(()=>{ back.classList.add('open'); const d = back.querySelector('.drawer'); if(d) d.classList.add('open'); }));
@@ -1259,9 +1294,403 @@ function renderTop10(){
   if(rows.length) drawTop10(cv);
 }
 
+/* ═════════ Compte et synchronisation (Supabase, sans bibliothèque) ═════════ */
+const CLOUD = { url:'', key:'' };   /* adresse du projet et clé « publishable » (publique) */
+const SESS_KEY = 'kizuna.session', CFG_KEY = 'kizuna.cloudcfg', SYNC_KEY = 'kizuna.lastsync';
+const CS = { session:null, status:'idle', msg:'', syncing:false, timer:null };
+try{ CS.session = JSON.parse(localStorage.getItem(SESS_KEY)||'null'); }catch(e){}
+function cfg(){
+  if(CLOUD.url && CLOUD.key) return { url:CLOUD.url, key:CLOUD.key, fixed:true };
+  try{ const c = JSON.parse(localStorage.getItem(CFG_KEY)||'null'); if(c && c.url && c.key) return { url:c.url, key:c.key, fixed:false }; }catch(e){}
+  return { url:'', key:'', fixed:false };
+}
+const cloudReady = () => { const c = cfg(); return !!(c.url && c.key); };
+function keyLooksSecret(k){
+  if(/^sb_secret_/.test(k)) return true;
+  const parts = k.split('.');
+  if(parts.length===3){ try{ const pl = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/'))); return pl.role==='service_role'; }catch(e){} }
+  return false;
+}
+function setSession(se){ CS.session = se; try{ if(se) localStorage.setItem(SESS_KEY,JSON.stringify(se)); else localStorage.removeItem(SESS_KEY); }catch(e){} }
+function toSession(j){
+  if(!j || !j.access_token) return null;
+  return { access_token:j.access_token, refresh_token:j.refresh_token, expires_at:j.expires_at || (Math.floor(Date.now()/1000) + (j.expires_in||3600)), user:{ id:j.user && j.user.id, email:j.user && j.user.email } };
+}
+async function sb(path, o){
+  o = o || {};
+  const c = cfg(); if(!c.url || !c.key) throw new Error('config');
+  const headers = { apikey:c.key, 'Content-Type':'application/json' };
+  if(o.token) headers.Authorization = 'Bearer '+o.token;
+  if(o.prefer) headers.Prefer = o.prefer;
+  const r = await fetch(c.url.replace(/\/+$/,'')+path,{ method:o.method||'GET', headers, body:o.body ? JSON.stringify(o.body) : undefined });
+  let j = null; try{ j = await r.json(); }catch(e){}
+  if(!r.ok){ const err = new Error((j && (j.msg || j.error_description || j.message || j.error)) || ('HTTP '+r.status)); err.status = r.status; throw err; }
+  return j;
+}
+function frErr(e){
+  const m = ((e && e.message) || '').toLowerCase();
+  if(m==='config') return 'Le service de comptes n’est pas encore configuré.';
+  if(!e || e.name==='TypeError' || m.includes('failed to fetch') || m.includes('load failed') || m.includes('network')) return 'Connexion impossible. Vérifie ta connexion internet.';
+  if(m.includes('invalid login')) return 'Email ou mot de passe incorrect.';
+  if(m.includes('already registered') || m.includes('already been registered')) return 'Un compte existe déjà avec cet email. Connecte-toi.';
+  if(m.includes('not confirmed')) return 'Confirme d’abord ton email (vérifie ta boîte de réception).';
+  if(m.includes('same password') || m.includes('different from the old')) return 'Choisis un mot de passe différent de l’ancien.';
+  if(m.includes('weak') || m.includes('pwned') || m.includes('compromised') || m.includes('easy to guess')) return 'Ce mot de passe est trop faible ou trop connu. Choisis-en un autre.';
+  if(m.includes('at least') && m.includes('character')) return 'Mot de passe trop court (8 caractères minimum).';
+  if(m.includes('signups not allowed') || m.includes('signup is disabled')) return 'Les inscriptions sont désactivées pour cette application.';
+  if(m.includes('valid email') || m.includes('invalid email') || m.includes('unable to validate email')) return 'Adresse email invalide.';
+  if(m.includes('rate limit') || e.status===429) return 'Trop de tentatives. Réessaie dans quelques minutes.';
+  if(e.status===401 || e.status===403) return 'Session expirée. Reconnecte-toi.';
+  return 'Erreur : '+(e.message || 'inconnue');
+}
+async function getToken(){
+  const se = CS.session; if(!se) return null;
+  if(se.expires_at - Math.floor(Date.now()/1000) > 60) return se.access_token;
+  try{ const j = await sb('/auth/v1/token?grant_type=refresh_token',{ method:'POST', body:{ refresh_token:se.refresh_token } }); setSession(toSession(j)); return CS.session.access_token; }
+  catch(e){ if(e.status===400 || e.status===401 || e.status===403){ setSession(null); setStatus('idle'); } throw e; }
+}
+function setStatus(st,msg){ CS.status = st; CS.msg = msg || ''; updateAccountUI(); }
+function updateAccountUI(){ const a = $('#account'); if(a) a.replaceWith(accountCard()); }
+function refreshAccountViews(){ if(S.view==='profile') renderContent(); else updateAccountUI(); }
+
+/* Fusion de deux copies (appareil + cloud) */
+function mergeData(a, bRaw){
+  const b = Object.assign(defaults(), bRaw || {});
+  const out = defaults();
+  const ik = new Set([...Object.keys(a.items||{}), ...Object.keys(b.items||{})]);
+  ik.forEach(k=>{ const x = (a.items||{})[k], y = (b.items||{})[k]; out.items[k] = !x ? y : !y ? x : ((y.upd||0) > (x.upd||0) ? y : x); });
+  const dm = new Map(); [...(b.diary||[]), ...(a.diary||[])].forEach(d=>dm.set(d.id,d)); out.diary = [...dm.values()];
+  const lm = new Map();
+  [...(b.lists||[]), ...(a.lists||[])].forEach(l=>{ const e = lm.get(l.id); if(!e) lm.set(l.id,Object.assign({},l,{ keys:[...l.keys] })); else l.keys.forEach(k=>{ if(!e.keys.includes(k)) e.keys.push(k); }); });
+  out.lists = [...lm.values()];
+  const sk = new Set([...Object.keys(a.shelf||{}), ...Object.keys(b.shelf||{})]);
+  sk.forEach(k=>{ const x = (a.shelf||{})[k], y = (b.shelf||{})[k];
+    if(!x || !y){ out.shelf[k] = x || y; return; }
+    out.shelf[k] = Object.assign({}, x, { total:Math.max(x.total||0,y.total||0), own:[...new Set([...x.own,...y.own])].sort((p,q)=>p-q), read:[...new Set([...x.read,...y.read])].sort((p,q)=>p-q), added:Math.min(x.added||Date.now(),y.added||Date.now()) }); });
+  const pa = a.profile || {}, pb = b.profile || {};
+  out.profile = Object.assign(defaults().profile, (!pa.name && pb.name) ? pb : (!pb.name ? pa : ((a.updatedAt||0) >= (b.updatedAt||0) ? pa : pb)));
+  out.settings = Object.assign({}, b.settings, a.settings, { tmdb:(a.settings||{}).tmdb || '' });
+  out.updatedAt = Date.now();
+  return out;
+}
+const exportable = () => { const d = JSON.parse(JSON.stringify(DB)); d.settings.tmdb = ''; return d; };
+function scheduleSync(){ if(!CS.session || !cloudReady()) return; clearTimeout(CS.timer); CS.timer = setTimeout(()=>cloudSync(),2500); }
+async function cloudSync(){
+  if(!CS.session || CS.syncing || !cloudReady()) return;
+  CS.syncing = true; setStatus('syncing');
+  try{
+    const token = await getToken(); if(!token) throw new Error('Session expirée');
+    const uid = CS.session.user.id;
+    const rows = await sb(`/rest/v1/kizuna_data?user_id=eq.${encodeURIComponent(uid)}&select=data,updated_at`,{ token });
+    const remote = rows && rows[0], last = +localStorage.getItem(SYNC_KEY) || 0;
+    let changed = false;
+    if(remote && (Date.parse(remote.updated_at)||0) > last){ DB = mergeData(DB, remote.data||{}); saveLocal(); changed = true; }
+    const stamp = new Date().toISOString();
+    await sb('/rest/v1/kizuna_data?on_conflict=user_id',{ method:'POST', token, prefer:'resolution=merge-duplicates,return=minimal', body:{ user_id:uid, data:exportable(), updated_at:stamp } });
+    localStorage.setItem(SYNC_KEY,String(Date.parse(stamp))); localStorage.setItem('kizuna.lastsyncAt',String(Date.now()));
+    CS.syncing = false; setStatus('ok');
+    if(changed){ applyTheme(); render(); }
+  }catch(e){ CS.syncing = false; if(CS.session) setStatus('error',frErr(e)); }
+}
+async function signOut(){
+  try{ const t = CS.session && CS.session.access_token; if(t) await sb('/auth/v1/logout',{ method:'POST', token:t }); }catch(e){}
+  setSession(null); localStorage.removeItem(SYNC_KEY); localStorage.removeItem('kizuna.lastsyncAt'); CS.status = 'idle'; CS.msg = '';
+  if(confirm('Tu es déconnecté.\n\nOK : effacer aussi la collection enregistrée sur cet appareil (elle reste dans ton compte).\nAnnuler : la garder sur cet appareil.')){ DB = defaults(); saveLocal(); applyTheme(); }
+  render();
+}
+async function deleteAccount(){
+  if(!confirm('Supprimer définitivement ton compte, ton adresse email et toutes tes données en ligne ? Cette action est irréversible.')) return;
+  if(!confirm('Dernière confirmation : le compte sera effacé. Ta collection enregistrée sur cet appareil ne sera pas touchée.')) return;
+  try{ const token = await getToken(); await sb('/rest/v1/rpc/delete_my_account',{ method:'POST', token, body:{} }); }
+  catch(e){ toast(frErr(e)); return; }
+  setSession(null); localStorage.removeItem(SYNC_KEY); localStorage.removeItem('kizuna.lastsyncAt'); CS.status = 'idle'; CS.msg = '';
+  toast('Compte supprimé'); render();
+}
+async function deleteCloudData(){
+  if(!confirm('Supprimer la copie de ta collection stockée en ligne ? Ta collection sur cet appareil reste intacte.')) return;
+  try{ const token = await getToken(); await sb(`/rest/v1/kizuna_data?user_id=eq.${encodeURIComponent(CS.session.user.id)}`,{ method:'DELETE', token, prefer:'return=minimal' }); localStorage.removeItem(SYNC_KEY); toast('Données en ligne supprimées'); }
+  catch(e){ toast(frErr(e)); }
+}
+function accountCard(){
+  const se = CS.session, box = h('div',{id:'account',class:'acc'});
+  if(!se){
+    box.append(h('div',{class:'grow'},h('b',{},'Sauvegarde en ligne'),h('small',{style:'word-break:normal'},'Crée un compte pour retrouver ta collection sur tous tes appareils.')),
+      h('button',{class:'btn',onclick:()=>openAuth('in')},'Se connecter'),
+      h('button',{class:'btn ghost',onclick:()=>openAuth('up')},'Créer un compte'));
+    return box;
+  }
+  const st = CS.status, at = +localStorage.getItem('kizuna.lastsyncAt') || 0;
+  const label = st==='syncing' ? 'Synchronisation…' : st==='error' ? (CS.msg || 'Erreur de synchronisation') : (at ? 'Synchronisé à '+new Date(at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : 'Prêt');
+  box.append(h('div',{class:'grow'},h('b',{},'Connecté'),h('small',{},se.user.email),h('small',{style:'word-break:normal'},h('span',{class:'dot '+(st==='ok'?'ok':st==='syncing'?'sync':st==='error'?'err':'')}),label)),
+    h('button',{class:'btn ghost sm',onclick:()=>cloudSync(true)},'Synchroniser'),
+    h('button',{class:'btn ghost sm',onclick:signOut},'Se déconnecter'));
+  return box;
+}
+
+/* Fenêtre de connexion */
+const AU = { mode:'in', busy:false, msg:null, email:'', cgu:false, age:false };
+function openAuth(mode){ AU.mode = mode || 'in'; AU.msg = null; renderAuth(); document.body.style.overflow = 'hidden'; }
+function closeAuth(){ const v = $('#veil4'); if(v) v.remove(); document.body.style.overflow = CUR ? 'hidden' : ''; }
+function fld(id,label,type,val,auto){ return h('div',{class:'fld'},h('label',{for:id},label),h('input',{id,type,value:val||'',autocomplete:auto||'off',autocapitalize:'none',spellcheck:'false'})); }
+function renderAuth(){
+  const old = $('#veil4'); if(old) old.remove();
+  const msg = AU.msg ? h('div',{class:'msg '+AU.msg.t,role:'alert'},AU.msg.text) : null;
+  let inner;
+  if(!cloudReady()){
+    inner = [h('h2',{},'Configurer les comptes'),
+      h('p',{class:'note'},'Colle l’adresse de ton projet Supabase et sa clé « publishable ». Ces deux valeurs sont publiques. Ne colle jamais une clé secrète.'),
+      msg, fld('cf-url','Adresse du projet (https://….supabase.co)','url',''), fld('cf-key','Clé publishable (sb_publishable_…)','text',''),
+      h('button',{class:'btn',onclick:()=>{
+        const url = $('#cf-url').value.trim(), key = $('#cf-key').value.trim();
+        if(!/^https:\/\/.+/.test(url)){ AU.msg = { t:'err', text:'L’adresse doit commencer par https://' }; return renderAuth(); }
+        if(!key){ AU.msg = { t:'err', text:'Colle la clé publishable.' }; return renderAuth(); }
+        if(keyLooksSecret(key)){ AU.msg = { t:'err', text:'Cette clé est une clé secrète : ne la mets jamais dans l’application. Utilise la clé « publishable ».' }; return renderAuth(); }
+        try{ localStorage.setItem(CFG_KEY,JSON.stringify({ url, key })); }catch(e){}
+        AU.msg = { t:'ok', text:'Configuration enregistrée sur cet appareil.' }; renderAuth();
+      }},'Enregistrer')];
+  } else if(AU.mode==='recover-set'){
+    inner = [h('h2',{},'Nouveau mot de passe'), msg, fld('au-pw','Nouveau mot de passe (8 caractères minimum)','password','','new-password'), fld('au-pw2','Confirme le mot de passe','password','','new-password'),
+      h('button',{class:'btn',disabled:AU.busy,onclick:submitNewPassword},AU.busy?'Enregistrement…':'Enregistrer le mot de passe')];
+  } else {
+    const up = AU.mode==='up';
+    inner = [h('div',{class:'chips',style:'margin:2px 0 16px'},
+        h('button',{class:'chip'+(!up?' on':''),onclick:()=>{ AU.mode='in'; AU.msg=null; renderAuth(); }},'Connexion'),
+        h('button',{class:'chip'+(up?' on':''),onclick:()=>{ AU.mode='up'; AU.msg=null; renderAuth(); }},'Créer un compte')),
+      msg,
+      fld('au-email','Adresse email','email',AU.email,'email'),
+      fld('au-pw',up?'Mot de passe (8 caractères minimum)':'Mot de passe','password','',up?'new-password':'current-password'),
+      up ? fld('au-pw2','Confirme le mot de passe','password','','new-password') : null,
+      up ? h('label',{class:'chk'},h('input',{type:'checkbox',id:'au-cgu',checked:AU.cgu}),h('span',{},'J’ai lu et j’accepte les ',h('button',{type:'button',class:'linkbtn',onclick:()=>openLegal('cgu')},'conditions d’utilisation'),' et la ',h('button',{type:'button',class:'linkbtn',onclick:()=>openLegal('confidentialite')},'politique de confidentialité'),'.')) : null,
+      up ? h('label',{class:'chk'},h('input',{type:'checkbox',id:'au-age',checked:AU.age}),h('span',{},'Je confirme avoir 15 ans ou plus, ou avoir l’accord de mon représentant légal.')) : null,
+      h('button',{class:'btn',style:'width:100%',disabled:AU.busy,onclick:submitAuth},AU.busy?'Un instant…':(up?'Créer mon compte':'Me connecter')),
+      !up ? h('p',{style:'margin:14px 0 0;text-align:center'},h('button',{class:'linkbtn',onclick:authRecover},'Mot de passe oublié ?')) : null,
+      h('p',{class:'note',style:'margin-top:16px'},'Ta collection est enregistrée dans ton compte et protégée par des règles de sécurité : seul ton compte peut la lire. Kizuna fonctionne aussi sans compte.')];
+    inner.unshift(h('h2',{},up?'Créer un compte':'Se connecter'));
+  }
+  const v = h('div',{id:'veil4',class:'veil',onclick:ev=>{ if(ev.target.id==='veil4') closeAuth(); }},
+    h('div',{class:'sheet t10',role:'dialog','aria-modal':'true','aria-label':'Compte Kizuna',style:'max-width:440px'},
+      h('button',{class:'x','aria-label':'Fermer',onclick:closeAuth},'×'), inner));
+  document.body.append(v);
+}
+async function submitAuth(){
+  const up = AU.mode==='up';
+  const email = $('#au-email').value.trim(), pw = $('#au-pw').value, pw2 = up ? $('#au-pw2').value : '';
+  AU.email = email; AU.cgu = !!($('#au-cgu') && $('#au-cgu').checked); AU.age = !!($('#au-age') && $('#au-age').checked);
+  const bad = t => { AU.msg = { t:'err', text:t }; renderAuth(); };
+  if(!email || !pw) return bad('Renseigne ton email et ton mot de passe.');
+  if(up && pw.length < 8) return bad('Choisis un mot de passe d’au moins 8 caractères.');
+  if(up && pw!==pw2) return bad('Les deux mots de passe ne correspondent pas.');
+  if(up && !AU.cgu) return bad('Tu dois accepter les conditions d’utilisation et la politique de confidentialité.');
+  if(up && !AU.age) return bad('Tu dois confirmer avoir 15 ans ou plus, ou l’accord de ton représentant légal.');
+  AU.busy = true; AU.msg = null; renderAuth();
+  try{
+    if(up){
+      const j = await sb('/auth/v1/signup',{ method:'POST', body:{ email, password:pw, data:{ cgu_version:LEGAL.version, accepted_at:new Date().toISOString(), age_15_confirmed:true } } });
+      if(!(j && j.access_token)){ AU.busy = false; AU.mode = 'in'; AU.msg = { t:'ok', text:'Compte créé ! Vérifie ta boîte mail pour confirmer ton adresse, puis connecte-toi.' }; return renderAuth(); }
+      setSession(toSession(j));
+    } else {
+      const j = await sb('/auth/v1/token?grant_type=password',{ method:'POST', body:{ email, password:pw } });
+      setSession(toSession(j));
+    }
+    AU.busy = false; closeAuth(); toast(up ? 'Compte créé, bienvenue !' : 'Connecté'); refreshAccountViews(); await cloudSync();
+  }catch(e){ AU.busy = false; AU.msg = { t:'err', text:frErr(e) }; renderAuth(); }
+}
+async function authRecover(){
+  const el = $('#au-email'), email = ((el && el.value) || AU.email || '').trim(); AU.email = email;
+  if(!email){ AU.msg = { t:'err', text:'Entre d’abord ton adresse email.' }; return renderAuth(); }
+  try{ await sb('/auth/v1/recover',{ method:'POST', body:{ email } }); AU.msg = { t:'ok', text:'Si un compte existe avec cette adresse, un lien de réinitialisation vient d’être envoyé.' }; }
+  catch(e){ AU.msg = { t:'err', text:frErr(e) }; }
+  renderAuth();
+}
+async function submitNewPassword(){
+  const pw = $('#au-pw').value, pw2 = $('#au-pw2').value;
+  const bad = t => { AU.msg = { t:'err', text:t }; renderAuth(); };
+  if(pw.length < 8) return bad('Choisis un mot de passe d’au moins 8 caractères.');
+  if(pw!==pw2) return bad('Les deux mots de passe ne correspondent pas.');
+  AU.busy = true; AU.msg = null; renderAuth();
+  try{ const token = await getToken(); await sb('/auth/v1/user',{ method:'PUT', token, body:{ password:pw } }); AU.busy = false; closeAuth(); toast('Mot de passe mis à jour'); refreshAccountViews(); cloudSync(); }
+  catch(e){ AU.busy = false; AU.msg = { t:'err', text:frErr(e) }; renderAuth(); }
+}
+async function handleAuthHash(){
+  const raw = location.hash.replace(/^#/,''); if(!raw) return;
+  const p = new URLSearchParams(raw);
+  if(p.get('error_description')){ history.replaceState(null,'',location.pathname+location.search); toast('Lien invalide ou expiré. Recommence la demande.'); return; }
+  const at = p.get('access_token'); if(!at || !cloudReady()) return;
+  history.replaceState(null,'',location.pathname+location.search);
+  try{
+    const u = await sb('/auth/v1/user',{ token:at });
+    setSession({ access_token:at, refresh_token:p.get('refresh_token'), expires_at:Math.floor(Date.now()/1000) + (+p.get('expires_in') || 3600), user:{ id:u.id, email:u.email } });
+    if(p.get('type')==='recovery'){ AU.mode = 'recover-set'; AU.msg = null; renderAuth(); document.body.style.overflow = 'hidden'; }
+    else { toast('Email confirmé, tu es connecté'); refreshAccountViews(); cloudSync(); }
+  }catch(e){ toast(frErr(e)); }
+}
+
+/* ═════════ Informations légales (France / Union européenne) ═════════ */
+/* À COMPLÉTER par l’éditeur avant la mise en ligne publique */
+const LEGAL = {
+  version:'1.0', date:'14 octobre 2026',
+  anonymous:false,      /* true : l’éditeur reste anonyme (identité communiquée aux hébergeurs uniquement) */
+  editorName:'',        /* prénom et nom de l’éditeur (personne physique) */
+  contactEmail:'',      /* adresse de contact pour les demandes (droits RGPD, signalements) */
+  region:''             /* région de la base Supabase choisie à la création du projet (ex. : Europe de l’Ouest) */
+};
+const todo = label => h('span',{class:'todo'},'[à compléter : '+label+']');
+const lv = (k,label) => LEGAL[k] ? LEGAL[k] : todo(label);
+const mail = () => LEGAL.contactEmail ? h('a',{href:'mailto:'+LEGAL.contactEmail,style:'color:var(--asagi)'},LEGAL.contactEmail) : todo('adresse email de contact');
+const LP = (...parts) => h('p',{},...parts);
+const LH = t => h('h3',{},t);
+const LU = items => h('ul',{},items.map(i=>h('li',{},...(Array.isArray(i)?i:[i]))));
+const LEGAL_TITLES = { 'mentions-legales':'Mentions légales', confidentialite:'Confidentialité et données personnelles', cgu:'Conditions d’utilisation', credits:'Crédits et sources' };
+
+function legalDoc(name){
+  if(name==='mentions-legales') return [
+    LH('Éditeur du service'),
+    LEGAL.anonymous
+      ? LP('Kizuna est édité à titre non professionnel par une personne physique qui a choisi de rester anonyme. Conformément à l’article 6, III, 2 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l’économie numérique (LCEN), son identité a été communiquée aux hébergeurs mentionnés ci-dessous.')
+      : LP('Kizuna est édité à titre non professionnel par ', lv('editorName','prénom et nom de l’éditeur'), ', personne physique. Le directeur de la publication est l’éditeur.'),
+    LP('Contact : ', mail(), '.'),
+    LH('Hébergement'),
+    LU([
+      ['Application web (pages et code) : GitHub Pages, service de GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.'],
+      ['Comptes et sauvegarde en ligne (facultatifs) : Supabase (Supabase Inc., États-Unis, et Supabase Pte. Ltd., Singapour). Base de données hébergée dans la région : ', lv('region','région choisie à la création du projet Supabase'), '. Informations : supabase.com.']
+    ]),
+    LH('Gratuité'),
+    LP('Kizuna est gratuit, sans publicité et sans vente de données.'),
+    LH('Propriété intellectuelle'),
+    LP('Le code, la conception graphique et les textes propres à Kizuna sont la propriété de son éditeur. Toute reproduction non autorisée est interdite.'),
+    LP('Les titres, affiches, visuels et synopsis des œuvres affichés dans l’application appartiennent à leurs titulaires respectifs. Ils sont fournis par des services tiers (AniList, MyAnimeList via Jikan, TMDB). Kizuna n’est affilié à aucun de ces services ni à aucun éditeur d’œuvres, et n’est ni approuvé ni certifié par eux.'),
+    LH('Signaler un contenu ou un problème'),
+    LP('Pour signaler un contenu manifestement illicite, une atteinte à tes droits ou un problème de sécurité, écris à ', mail(), '. Les signalements sont examinés dans les meilleurs délais. Aujourd’hui, Kizuna ne publie aucun contenu d’utilisateur : tes notes et critiques ne sont lisibles que par toi.'),
+    LH('Données personnelles'),
+    LP('Le traitement des données personnelles est décrit dans la politique de confidentialité, accessible depuis le menu et le bas de page.')
+  ];
+  if(name==='confidentialite') return [
+    LP('Cette politique explique quelles données Kizuna traite, pourquoi, et comment exercer tes droits (règlement (UE) 2016/679, « RGPD », et loi « Informatique et Libertés »).'),
+    LH('1. Qui est responsable ?'),
+    LP('Le responsable du traitement est l’éditeur de Kizuna', LEGAL.anonymous ? ' (voir les mentions légales)' : [' : ', lv('editorName','prénom et nom de l’éditeur')], '. Contact : ', mail(), '. Aucun délégué à la protection des données (DPO) n’est désigné.'),
+    LH('2. Quelles données, pourquoi, sur quelle base ?'),
+    LU([
+      [h('b',{},'Sans compte. '),'Tes notes, critiques, listes, journal, bibliothèque de mangas, profil et réglages restent enregistrés uniquement sur ton appareil, dans le stockage local de ton navigateur. Ils ne sont pas envoyés à Kizuna.'],
+      [h('b',{},'Compte. '),'Adresse email, mot de passe (conservé uniquement sous forme hachée par le prestataire d’authentification, jamais en clair), identifiant technique, version des conditions acceptées, date d’acceptation et confirmation de l’âge. Finalité : créer et gérer ton compte. Base légale : exécution du contrat (conditions d’utilisation), art. 6.1.b du RGPD.'],
+      [h('b',{},'Sauvegarde en ligne. '),'Si tu te connectes : ta collection, tes notes, critiques, listes, journal, bibliothèque, pseudo, bio, avatar, favoris et thème (jamais ta clé TMDB). Finalité : les retrouver sur tous tes appareils. Base légale : exécution du contrat.'],
+      [h('b',{},'Sécurité. '),'Journaux techniques (adresse IP, dates de connexion, erreurs) tenus par les prestataires pour protéger le service contre les abus. Base légale : intérêt légitime, art. 6.1.f.'],
+      [h('b',{},'Recherche d’œuvres. '),'Les termes que tu cherches et ton adresse IP sont transmis à AniList et à MyAnimeList (via Jikan) pour obtenir les résultats, et à TMDB si tu actives cette option avec ta propre clé. Aucun identifiant de compte n’est transmis à ces services. Base légale : exécution du contrat.']
+    ]),
+    LP('Tes critiques sont libres : évite d’y écrire des informations sensibles te concernant ou concernant d’autres personnes (santé, opinions politiques ou religieuses, orientation sexuelle…).'),
+    LH('3. Ce que Kizuna ne fait pas'),
+    LP('Aucune publicité, aucune vente ni cession de données, aucun profilage, aucune décision automatisée, aucun outil de mesure d’audience, aucun traceur de réseaux sociaux.'),
+    LH('4. Destinataires'),
+    LU([
+      ['Supabase : hébergement de la base de données et de l’authentification (sous-traitant, encadré par un accord de traitement de données).'],
+      ['GitHub : hébergement des pages de l’application. GitHub reçoit l’adresse IP des visiteurs dans ses journaux techniques.'],
+      ['AniList, MyAnimeList (Jikan) et TMDB : destinataires de tes recherches. Ils sont responsables de leurs propres traitements ; consulte leurs politiques de confidentialité.']
+    ]),
+    LH('5. Transferts hors de l’Union européenne'),
+    LP('Les données du compte sont stockées dans la région indiquée dans les mentions légales. Certains prestataires (Supabase Inc., GitHub, services de recherche) peuvent traiter des données hors de l’Union européenne, notamment aux États-Unis ou à Singapour. Ces transferts sont encadrés par les garanties prévues par le RGPD, notamment les clauses contractuelles types de la Commission européenne.'),
+    LH('6. Durée de conservation'),
+    LU([
+      ['Sans compte : jusqu’à ce que tu effaces les données de ton navigateur ou utilises « Tout effacer ».'],
+      ['Avec compte : tant que ton compte existe. Quand tu supprimes ton compte (Profil, Réglages), ton email et toutes tes données en ligne sont supprimés de la base de données.'],
+      ['Journaux techniques : conservés par les prestataires pendant une durée limitée, selon leurs propres règles.']
+    ]),
+    LH('7. Tes droits'),
+    LP('Tu disposes des droits d’accès, de rectification, d’effacement, de limitation, d’opposition, de portabilité, du droit de retirer ton consentement à tout moment, et du droit de définir des directives sur le sort de tes données après ton décès.'),
+    LU([
+      ['Accès et portabilité : Profil > Réglages > Exporter ma collection (fichier JSON).'],
+      ['Rectification : tu modifies tes données directement dans l’application.'],
+      ['Effacement : Profil > Réglages > Supprimer mes données en ligne, ou Supprimer mon compte.'],
+      ['Autres demandes : écris à ', mail(), '. Réponse sous un mois.']
+    ]),
+    LP('Si tu estimes que tes droits ne sont pas respectés, tu peux saisir la CNIL : 3 place de Fontenoy, TSA 80715, 75334 Paris Cedex 07, cnil.fr.'),
+    LH('8. Mineurs'),
+    LP('En France, un mineur peut consentir seul au traitement de ses données à partir de 15 ans. Le compte Kizuna est donc réservé aux personnes de 15 ans ou plus, ou disposant de l’accord de leur représentant légal. Kizuna peut être utilisé sans compte.'),
+    LH('9. Stockage dans ton navigateur (cookies et traceurs)'),
+    LP('Kizuna ne dépose aucun cookie. Il utilise le stockage local de ton navigateur, uniquement pour faire fonctionner le service que tu demandes : conserver ta collection et tes réglages (dont le thème), maintenir ta connexion et suivre la synchronisation. Ces usages sont strictement nécessaires et ne requièrent pas de consentement. Aucun traceur publicitaire ou de mesure d’audience n’est utilisé.'),
+    LU([
+      ['kizuna.v1 : ta collection, ton journal, tes listes, ta bibliothèque, ton profil et tes réglages.'],
+      ['kizuna.session : ta session de connexion (si tu es connecté).'],
+      ['kizuna.lastsync et kizuna.lastsyncAt : dates de la dernière synchronisation.'],
+      ['kizuna.cloudcfg : configuration technique de la connexion (si elle a été saisie à la main).']
+    ]),
+    LH('10. Sécurité'),
+    LP('Les échanges sont chiffrés (HTTPS). Chaque compte ne peut lire et modifier que ses propres données (règles d’accès au niveau de la base). Les mots de passe sont hachés. En cas de violation de données susceptible d’entraîner un risque élevé pour toi, tu en seras informé conformément au RGPD.'),
+    LH('11. Modifications'),
+    LP('Cette politique peut évoluer. La version en vigueur est indiquée ci-dessus, avec sa date.')
+  ];
+  if(name==='cgu') return [
+    LH('1. Objet'),
+    LP('Les présentes conditions encadrent l’utilisation de Kizuna, application web gratuite pour noter et suivre des animés, des films d’animation et des mangas.'),
+    LH('2. Accès au service'),
+    LP('Kizuna est accessible gratuitement avec une connexion internet pour la recherche d’œuvres. Les fonctions de collection fonctionnent hors connexion. Le compte est réservé aux personnes de 15 ans ou plus, ou disposant de l’accord de leur représentant légal.'),
+    LH('3. Compte'),
+    LP('Le compte est facultatif et personnel. Tu t’engages à fournir une adresse email valide, à garder ton mot de passe confidentiel et à nous prévenir en cas d’usage non autorisé. Tu peux supprimer ton compte à tout moment depuis Profil > Réglages.'),
+    LH('4. Usage acceptable'),
+    LP('Tu t’engages à ne pas : perturber ou surcharger le service, tenter d’accéder aux données d’autres utilisateurs, contourner les mesures de sécurité, ni y enregistrer de contenu illicite (injurieux, discriminatoire, portant atteinte aux droits d’autrui).'),
+    LH('5. Tes contenus'),
+    LP('Tes notes, critiques, listes et autres contenus t’appartiennent. Tu autorises Kizuna uniquement à les stocker et à les afficher pour toi, afin de fournir le service. Ils ne sont pas visibles par les autres utilisateurs.'),
+    LH('6. Contenus et services tiers'),
+    LP('Les données sur les œuvres proviennent de services tiers (AniList, MyAnimeList via Jikan, TMDB). Elles peuvent être incomplètes ou erronées. Les visuels et textes appartiennent à leurs titulaires, et leur usage dans Kizuna est limité à l’information personnelle.'),
+    LH('7. Disponibilité et évolutions'),
+    LP('Kizuna est fourni gratuitement, « en l’état ». Le service peut être interrompu, modifié ou arrêté, notamment si un service tiers change ou devient indisponible. Pense à exporter régulièrement ta sauvegarde (Profil > Réglages).'),
+    LH('8. Responsabilité'),
+    LP('L’éditeur s’efforce d’assurer un service fiable, mais ne garantit ni l’absence d’interruption, ni l’absence de perte de données. Rien dans ces conditions n’exclut ni ne limite une responsabilité qui ne peut l’être légalement, ni les droits que la loi reconnaît aux consommateurs.'),
+    LH('9. Suspension et suppression'),
+    LP('L’éditeur peut suspendre un compte en cas d’usage contraire aux présentes conditions. Tu peux supprimer ton compte à tout moment ; tes données en ligne sont alors effacées.'),
+    LH('10. Modification des conditions'),
+    LP('Les conditions peuvent évoluer. En cas de changement important, tu en seras informé dans l’application. La version en vigueur est celle indiquée ci-dessus.'),
+    LH('11. Droit applicable et litiges'),
+    LP('Les présentes conditions sont soumises au droit français. En cas de litige, contacte d’abord l’éditeur à ', mail(), ' pour chercher une solution amiable. Les juridictions françaises sont compétentes, sans préjudice des règles protectrices applicables aux consommateurs.')
+  ];
+  return [
+    LH('Sources de données'),
+    LU([
+      ['Données et visuels d’œuvres : AniList (anilist.co).'],
+      ['Notes et compléments : MyAnimeList, via l’API Jikan (jikan.moe).'],
+      ['Titres et synopsis en français (option activée avec une clé personnelle) : TMDB (themoviedb.org).']
+    ]),
+    LP('Ce produit utilise l’API TMDB mais n’est ni approuvé ni certifié par TMDB.'),
+    LP('Kizuna n’est affilié ni à AniList, ni à MyAnimeList, ni à TMDB, ni aux éditeurs des œuvres affichées. Les marques, titres et visuels appartiennent à leurs propriétaires respectifs.'),
+    LH('Technique'),
+    LP('Kizuna est une application web autonome : elle n’utilise aucune bibliothèque externe ni police téléchargée.'),
+    LH('Version'),
+    LP('Application version ', APP.version, ' · documents légaux version ', LEGAL.version, ' du ', LEGAL.date, '.')
+  ];
+}
+function openLegal(name){
+  if(!LEGAL_TITLES[name]) return;
+  const old = $('#veil5'); if(old) old.remove();
+  const v = h('div',{id:'veil5',class:'veil',onclick:ev=>{ if(ev.target.id==='veil5') closeLegal(); }},
+    h('div',{class:'sheet t10 legal',role:'dialog','aria-modal':'true','aria-label':LEGAL_TITLES[name],style:'max-width:760px'},
+      h('button',{class:'x','aria-label':'Fermer',onclick:closeLegal},'×'),
+      h('h2',{},LEGAL_TITLES[name]),
+      h('p',{class:'upd'},'Version '+LEGAL.version+' · mise à jour le '+LEGAL.date),
+      legalDoc(name),
+      h('div',{class:'row2',style:'margin-top:22px'},
+        ['mentions-legales','confidentialite','cgu','credits'].filter(n=>n!==name).map(n=>h('button',{class:'btn ghost sm',onclick:()=>openLegal(n)},LEGAL_TITLES[n].split(' et ')[0])))));
+  document.body.append(v); document.body.style.overflow = 'hidden';
+  try{ history.replaceState(null,'','#'+name); }catch(e){}
+}
+function closeLegal(){
+  const v = $('#veil5'); if(v) v.remove();
+  document.body.style.overflow = ($('#veil4') || CUR) ? 'hidden' : '';
+  try{ if(LEGAL_TITLES[location.hash.slice(1)]) history.replaceState(null,'',location.pathname+location.search); }catch(e){}
+}
+function handleLegalHash(){ const n = location.hash.slice(1); if(LEGAL_TITLES[n]) openLegal(n); }
+function renderLegalLinks(){
+  const box = document.getElementById('legal-links'); if(!box) return; box.replaceChildren();
+  [['mentions-legales','Mentions légales'],['confidentialite','Confidentialité'],['cgu','Conditions d’utilisation'],['credits','Crédits']].forEach(([n,l])=>box.append(h('button',{class:'linkbtn',onclick:()=>openLegal(n)},l)));
+}
+
 document.getElementById('ver').textContent = APP.version;
-document.addEventListener('keydown',ev=>{ if(ev.key==='Escape'){ if($('#dw')) closeDrawer(); else if($('#veil3')) closeFavs(); else if($('#veil2')) closeTop10(); else if(CUR) closeDetail(); } });
+document.addEventListener('keydown',ev=>{ if(ev.key==='Escape'){ if($('#veil5')) closeLegal(); else if($('#veil4')) closeAuth(); else if($('#dw')) closeDrawer(); else if($('#veil3')) closeFavs(); else if($('#veil2')) closeTop10(); else if(CUR) closeDetail(); } });
 render();
+renderLegalLinks();
+handleLegalHash();
+window.addEventListener('hashchange',handleLegalHash);
+handleAuthHash();
+if(CS.session && cloudReady()) cloudSync();
+window.addEventListener('online',()=>{ if(CS.session) cloudSync(); });
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible' && CS.session && Date.now() - (+localStorage.getItem('kizuna.lastsyncAt')||0) > 60000) cloudSync(); });
 </script>
 </body>
 </html>
