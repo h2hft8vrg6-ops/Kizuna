@@ -294,6 +294,14 @@ footer{text-align:center;color:var(--washi-dim);font-size:12.5px;padding:0 14px 
 .chk input{width:auto;margin-top:3px;flex:none}
 .flinks{display:flex;gap:6px 16px;flex-wrap:wrap;justify-content:center;margin-bottom:8px}
 .flinks .linkbtn{font-size:13px}
+.ibtn{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--asagi);color:var(--asagi);font-family:var(--serif);font-style:italic;font-weight:700;font-size:15px;line-height:1;margin-left:8px;vertical-align:middle;flex:none;background:transparent;transition:background .15s,color .15s}
+.ibtn:hover{background:var(--asagi);color:var(--ai-900)}
+.ibtn.abs{position:absolute;top:12px;right:12px;margin:0}
+.pcard{position:relative}
+.head h2,.sec h3,.acc b{display:flex;align-items:center}
+.acc b{display:flex}
+.guide-item{border-top:1px solid var(--line);padding-top:4px}
+.guide-item:first-of-type{border-top:0}
 @media (max-width:640px){
   nav{flex-wrap:wrap;overflow:visible;margin-left:0;width:100%}
   nav button{flex:1 1 21%;padding:6px 2px 7px}
@@ -317,7 +325,7 @@ footer{text-align:center;color:var(--washi-dim);font-size:12.5px;padding:0 14px 
 <script>
 'use strict';
 /* ═════════ Identité (change le nom ici) ═════════ */
-const APP = { version:'7', name:'Kizuna', kanji:'絆', tag:'Le journal de tes animés, films et mangas' };
+const APP = { version:'8', name:'Kizuna', kanji:'絆', tag:'Le journal de tes animés, films et mangas' };
 
 /* ═════════ Stockage local ═════════ */
 const KEY = 'kizuna.v1';
@@ -668,7 +676,7 @@ function renderDetail(){
       h('div',{class:'body'},
         Poster(meta),
         h('div',{},
-          h('h2',{},title),
+          h('h2',{},title,Info('fiche')),
           meta.titleJp ? h('div',{class:'jp'},meta.titleJp) : null,
           h('div',{class:'facts'},facts),
           meta.genres && meta.genres.length ? h('div',{class:'genres'},meta.genres.map(g=>h('span',{},g))) : null,
@@ -744,7 +752,7 @@ function letterStrip(re){
 }
 function filterBar(kind){
   const re = () => { renderToolbar(); if(kind==='mine') renderContent(); else runSearch(false); };
-  const box = h('div',{class:'fbar'});
+  const box = h('div',{class:'fbar'}, h('div',{class:'frow'}, h('b',{style:'font-family:var(--serif);display:flex;align-items:center'},'Filtres',Info('filters'))));
   if(kind==='explore') box.append(h('div',{class:'chips'},[['POPULARITY_DESC','Les plus populaires'],['TRENDING_DESC','Tendances'],['SCORE_DESC','Mieux notés'],['ALPHA','A → Z']].map(([v,l])=>h('button',{class:'chip'+(S.sort===v?' on':''),'aria-pressed':String(S.sort===v),onclick:()=>{ S.sort = v; re(); }},l))));
   if(kind!=='mine'){
     const yrs = []; for(let y=new Date().getFullYear()+1; y>=1980; y--) yrs.push(y);
@@ -762,7 +770,7 @@ function renderToolbar(){
   const T = TYPE[S.view];
   tb.append(h('div',{class:'head'},
     h('div',{class:'vert','aria-hidden':'true'},T.kanji),
-    h('div',{}, h('h2',{},T.label), h('p',{},T.desc)),
+    h('div',{}, h('h2',{},T.label,Info(S.sub==='mine' ? 'mine' : S.sub==='season' ? 'season' : S.view)), h('p',{},T.desc)),
     h('div',{class:'tabs'},
       h('button',{class:S.sub==='explore'?'on':'',onclick:()=>setSub('explore')},'Explorer'),
       S.view==='anime' ? h('button',{class:S.sub==='season'?'on':'',onclick:()=>setSub('season')},'Saison') : null,
@@ -846,7 +854,8 @@ function renderContent(){
 }
 
 function sectionHead(kanji,title,text,extra){
-  return h('div',{class:'head'}, h('div',{class:'vert','aria-hidden':'true'},kanji), h('div',{}, h('h2',{},title), h('p',{},text)), extra? h('div',{class:'tabs'},extra) : null);
+  const ik = ({'日記':'journal','一覧':'lists','本棚':'shelf','暦':'calendar'})[kanji];
+  return h('div',{class:'head'}, h('div',{class:'vert','aria-hidden':'true'},kanji), h('div',{}, h('h2',{},title,ik ? Info(ik) : null), h('p',{},text)), extra? h('div',{class:'tabs'},extra) : null);
 }
 
 function viewJournal(c){
@@ -896,13 +905,13 @@ function viewLists(c){
 function viewProfile(c){
   c.append(accountCard());
   const P = DB.profile, favs = P.favs.map(metaOf).filter(Boolean);
-  c.append(h('div',{class:'pcard'}, avatarEl(88),
+  c.append(h('div',{class:'pcard'}, Info('profil',true), avatarEl(88),
     h('div',{class:'pinfo'},
       h('input',{type:'text',class:'pname',placeholder:'Choisis ton pseudo',value:P.name,maxlength:'24','aria-label':'Pseudo',oninput:ev=>{ P.name = ev.target.value; save(); }}),
       h('textarea',{class:'pbio',placeholder:'Ta bio : ton anime de chevet, ta saison préférée…',maxlength:'160','aria-label':'Bio',oninput:ev=>{ P.bio = ev.target.value; save(); }},P.bio||''),
       h('div',{class:'avs','aria-label':'Avatar'},AVATARS.map(a=>h('button',{class:'chip'+(P.avatar===a?' on':''),onclick:()=>{ P.avatar = a; save(); renderContent(); }},a))),
       h('div',{class:'avs','aria-label':'Couleur'},AVCOLORS.map(col=>h('button',{class:'colr'+(P.color===col?' on':''),style:'background:'+col,'aria-label':'Couleur '+col,onclick:()=>{ P.color = col; save(); renderContent(); }}))))));
-  c.append(h('div',{class:'sec',style:'margin-bottom:26px'},h('h3',{},'Mes favoris'),
+  c.append(h('div',{class:'sec',style:'margin-bottom:26px'},h('h3',{},'Mes favoris',Info('favs')),
     favs.length ? h('div',{class:'grid fav'},favs.map(Card)) : h('p',{class:'note',style:'margin:0 0 12px'},'Choisis les 4 œuvres qui te représentent le mieux.'),
     h('button',{class:'btn ghost sm',onclick:openFavs},favs.length?'Modifier mes favoris':'Choisir mes favoris')));
   const all = Object.values(DB.items).filter(active);
@@ -917,6 +926,7 @@ function viewProfile(c){
     else if(m.type==='film' && e.status==='done') minutes += 100;
     else if(m.type==='manga'){ chapters += e.status==='done' ? (e.progress || m.chapters || 0) : (e.progress||0); }
   });
+  c.append(h('h3',{style:'margin:0 0 12px;font-size:19px'},'Mes statistiques',Info('stats')));
   c.append(h('div',{class:'stats'},
     h('div',{class:'stat'},h('b',{},String(done('anime'))),h('span',{},'animés terminés')),
     h('div',{class:'stat'},h('b',{},String(done('film'))),h('span',{},'films vus')),
@@ -942,11 +952,11 @@ function viewProfile(c){
   if(liked.length) c.append(h('div',{class:'sec',style:'margin-bottom:26px'},h('h3',{},'Coups de cœur'),h('div',{class:'grid'},liked.slice(0,12).map(e=>Card(e.meta)))));
 
   /* Top 10 et thèmes */
-  c.append(h('div',{class:'sec',style:'margin-bottom:26px'},h('h3',{},'Mon top 10'),
+  c.append(h('div',{class:'sec',style:'margin-bottom:26px'},h('h3',{},'Mon top 10',Info('top10')),
     h('p',{class:'note',style:'margin:0 0 12px'},'Crée une image de tes 10 œuvres préférées, prête à partager.'),
     h('button',{class:'btn',onclick:openTop10},'Créer mon top 10')));
   const THEMES = [['indigo','Indigo','#0b1524','#c8402f','#dcb15a'],['grandline','Grand Line','#06202f','#d9402e','#f0c04e'],['plusultra','Plus Ultra','#07140f','#e0352b','#f5c52b'],['sakura','Sakura (clair)','#f6efe3','#c0392b','#c8921f'],['sumi','Sumi (noir)','#0a0a0a','#d8352a','#e0b84c']];
-  c.append(h('div',{id:'themes',class:'sec',style:'margin-bottom:26px'},h('h3',{},'Thèmes'),
+  c.append(h('div',{id:'themes',class:'sec',style:'margin-bottom:26px'},h('h3',{},'Thèmes',Info('themes')),
     h('div',{class:'themes'},THEMES.map(([id,name,a,b,g])=>h('button',{class:'theme'+((DB.settings.theme||'indigo')===id?' on':''),'aria-pressed':String((DB.settings.theme||'indigo')===id),onclick:()=>{ DB.settings.theme = id; save(); applyTheme(); renderContent(); }},
       h('div',{class:'sw'},[a,b,g].map(col=>h('i',{style:'background:'+col}))), h('span',{},name))))));
 
@@ -958,7 +968,7 @@ function viewProfile(c){
     r.onload = () => { try{ const d = JSON.parse(r.result); if(!d.items) throw 0; DB = Object.assign(defaults(), d); save(); toast('Sauvegarde importée'); render(); }catch(e){ alert('Ce fichier n’est pas une sauvegarde Kizuna valide.'); } };
     r.readAsText(f);
   }});
-  c.append(h('div',{class:'sec'},h('h3',{},'Réglages et sauvegarde'),
+  c.append(h('div',{class:'sec'},h('h3',{},'Réglages et sauvegarde',Info('settings')),
     h('div',{class:'setrow'},
       h('label',{},h('input',{type:'checkbox',checked:DB.settings.jikan,onchange:ev=>{ DB.settings.jikan = ev.target.checked; save(); }}),' Croiser avec MyAnimeList (Jikan)')),
     h('div',{class:'setrow'}, tmdbIn, h('button',{class:'btn ghost sm',onclick:()=>{ DB.settings.tmdb = tmdbIn.value.trim(); save(); toast(DB.settings.tmdb?'Clé TMDB enregistrée':'TMDB désactivé'); }},'Enregistrer')),
@@ -1024,6 +1034,7 @@ function openDrawer(){
       link('鍵','Mon compte (sauvegarde en ligne)',()=>{ closeDrawer(); go('profile'); setTimeout(()=>{ const t = $('#account'); if(t) t.scrollIntoView({behavior:'smooth',block:'center'}); },80); }),
       link('保','Exporter ma sauvegarde',()=>{ closeDrawer(); exportBackup(); }),
       h('div',{class:'dw-sec'},'Informations'),
+      link('説','Guide : comment ça marche ?',()=>{ closeDrawer(); openInfo('guide'); }),
       link('法','Mentions légales',()=>{ closeDrawer(); openLegal('mentions-legales'); }),
       link('守','Confidentialité et données',()=>{ closeDrawer(); openLegal('confidentialite'); }),
       link('約','Conditions d’utilisation',()=>{ closeDrawer(); openLegal('cgu'); }),
@@ -1414,14 +1425,14 @@ async function deleteCloudData(){
 function accountCard(){
   const se = CS.session, box = h('div',{id:'account',class:'acc'});
   if(!se){
-    box.append(h('div',{class:'grow'},h('b',{},'Sauvegarde en ligne'),h('small',{style:'word-break:normal'},'Crée un compte pour retrouver ta collection sur tous tes appareils.')),
+    box.append(h('div',{class:'grow'},h('b',{},'Sauvegarde en ligne',Info('account')),h('small',{style:'word-break:normal'},'Crée un compte pour retrouver ta collection sur tous tes appareils.')),
       h('button',{class:'btn',onclick:()=>openAuth('in')},'Se connecter'),
       h('button',{class:'btn ghost',onclick:()=>openAuth('up')},'Créer un compte'));
     return box;
   }
   const st = CS.status, at = +localStorage.getItem('kizuna.lastsyncAt') || 0;
   const label = st==='syncing' ? 'Synchronisation…' : st==='error' ? (CS.msg || 'Erreur de synchronisation') : (at ? 'Synchronisé à '+new Date(at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : 'Prêt');
-  box.append(h('div',{class:'grow'},h('b',{},'Connecté'),h('small',{},se.user.email),h('small',{style:'word-break:normal'},h('span',{class:'dot '+(st==='ok'?'ok':st==='syncing'?'sync':st==='error'?'err':'')}),label)),
+  box.append(h('div',{class:'grow'},h('b',{},'Connecté',Info('account')),h('small',{},se.user.email),h('small',{style:'word-break:normal'},h('span',{class:'dot '+(st==='ok'?'ok':st==='syncing'?'sync':st==='error'?'err':'')}),label)),
     h('button',{class:'btn ghost sm',onclick:()=>cloudSync(true)},'Synchroniser'),
     h('button',{class:'btn ghost sm',onclick:signOut},'Se déconnecter'));
   return box;
@@ -1523,6 +1534,93 @@ async function handleAuthHash(){
     if(p.get('type')==='recovery'){ AU.mode = 'recover-set'; AU.msg = null; renderAuth(); document.body.style.overflow = 'hidden'; }
     else { toast('Email confirmé, tu es connecté'); refreshAccountViews(); cloudSync(); }
   }catch(e){ toast(frErr(e)); }
+}
+
+/* ═════════ Aide : icône « i » sur chaque section ═════════ */
+/* chaque entrée : t = titre ; b = paragraphes (texte) et listes (tableaux) */
+const INFO = {
+  profil:{ t:'Ton profil', b:[
+    'C’est ta page d’accueil : ton identité dans Kizuna.',
+    ['Pseudo et bio : écris directement dans les champs, tout s’enregistre tout seul.','Avatar : choisis un kanji, puis une couleur.','Le menu ☰ en haut à droite te mène à toutes les autres sections.']]},
+  account:{ t:'Sauvegarde en ligne', b:[
+    'Facultatif. Sans compte, ta collection reste uniquement sur cet appareil. Avec un compte (email et mot de passe), elle est copiée dans ton compte et tu la retrouves sur tous tes appareils.',
+    ['Se connecter ou Créer un compte : ouvre le formulaire. Pour créer un compte, il faut accepter les conditions et confirmer avoir 15 ans ou plus.','Synchroniser : envoie et récupère tes données tout de suite. La synchronisation se fait aussi toute seule, quelques secondes après chaque modification.','Se déconnecter : ferme ta session. Tu choisis ensuite de garder ou d’effacer la copie présente sur l’appareil.'],
+    'La suppression de tes données en ligne ou de ton compte se trouve plus bas, dans « Réglages et sauvegarde ».']},
+  favs:{ t:'Mes favoris', b:[
+    'Les 4 œuvres qui te représentent le mieux, affichées sur ton profil.',
+    'Appuie sur « Choisir mes favoris », puis touche les affiches à retenir (4 maximum). Seules les œuvres de ta collection apparaissent : celles que tu as notées, rangées dans un statut, ou mises en coup de cœur.']},
+  stats:{ t:'Mes statistiques', b:[
+    'Un résumé de ce que tu as regardé et lu, calculé à partir de ta collection.',
+    ['Compteurs : animés terminés, films vus, mangas lus, tomes possédés, chapitres lus.','Heures devant l’écran : estimation (24 minutes par épisode, 100 minutes par film).','Note moyenne et répartition : plus tu notes d’œuvres, plus la courbe est précise.','Genres préférés : les catégories les plus fréquentes dans ta collection.']]},
+  top10:{ t:'Mon top 10', b:[
+    'Crée une image de tes 10 œuvres préférées, prête à partager sur tes réseaux.',
+    ['Le classement se remplit tout seul avec tes meilleures notes, puis tes coups de cœur.','Filtre par type : tout, animés, films ou mangas.','Réorganise avec ▲ et ▼, retire une œuvre avec ✕, et change le titre de l’image.','Partager l’image ouvre le partage de ton téléphone. Enregistrer en PNG la télécharge.'],
+    'L’image reprend les couleurs du thème choisi.']},
+  themes:{ t:'Thèmes', b:[
+    'Change l’ambiance de toute l’application d’un seul appui : Indigo, Grand Line (mer et parchemin), Plus Ultra (vert et or), Sakura (clair) ou Sumi (noir).',
+    'Le choix est enregistré, et suit ton compte si tu es connecté.']},
+  settings:{ t:'Réglages et sauvegarde', b:[
+    ['Croiser avec MyAnimeList : ajoute la note MyAnimeList à côté de celle d’AniList.','Clé TMDB (facultatif) : ajoute les titres et synopsis en français. Crée une clé gratuite sur themoviedb.org. Elle reste sur cet appareil.','Exporter ma collection : télécharge un fichier de sauvegarde (JSON) avec toutes tes données.','Importer une sauvegarde : restaure un fichier exporté.','Tout effacer : vide la collection de cet appareil.','Supprimer mes données en ligne, Supprimer mon compte : visibles quand tu es connecté. La suppression du compte est définitive.']]},
+  anime:{ t:'Animés', b:[
+    'Trouve des animés et range-les dans ta collection.',
+    ['Explorer : tape un titre dans la recherche, ou parcours les plus populaires, les tendances, les mieux notés ou la liste A → Z.','Touche une affiche pour ouvrir sa fiche : statut, note en étoiles, critique, listes, journal.','Saison : les animés de la saison en cours, avec un bouton pour changer de saison.','Ma collection : tes animés notés ou rangés, filtrables par statut (À voir, En cours, Vu, Abandonné) et par lettre.'],
+    'Les filtres (lettre, catégorie, année) sont expliqués par le « i » de la barre Filtres.']},
+  film:{ t:'Films', b:[
+    'Les longs métrages d’animation : trouve-les, note-les et range-les.',
+    ['Explorer : recherche par titre ou parcours les plus populaires, tendances, mieux notés, A → Z.','Touche une affiche pour ouvrir la fiche et noter le film, écrire une critique, l’ajouter à une liste ou au journal.','Ma collection : tes films notés ou rangés, avec filtre par statut et par lettre.']]},
+  manga:{ t:'Mangas', b:[
+    'Trouve des mangas et note-les. Pour suivre tes tomes un par un, utilise l’onglet Bibliothèque.',
+    ['Explorer : recherche (Naruto, Solo Leveling, Jujutsu Kaisen…) ou parcours les plus populaires, tendances, mieux notés, A → Z.','Dans une fiche, « Ajouter à ma bibliothèque » range le manga dans ta bibliothèque de tomes.','Ma collection : tes mangas notés ou rangés, avec filtre par statut (À lire, En cours, Lu, Abandonné) et par lettre.']]},
+  season:{ t:'Saison', b:[
+    'Les animés de la saison choisie, classés par popularité.',
+    ['‹ Précédente et Suivante › : change de saison (Hiver, Printemps, Été, Automne).','Saison actuelle : revient à la saison en cours.','Tu peux filtrer par catégorie et par lettre.']]},
+  mine:{ t:'Ma collection', b:[
+    'Tout ce que tu as noté ou rangé dans un statut pour ce type d’œuvre.',
+    ['Statut : Tout, À voir (ou À lire), En cours, Vu (ou Lu), Abandonné, ou Coups de cœur.','Tri : récemment ajoutés, meilleures notes, titre A-Z ou année.','Filtrer : cherche dans tes titres et tes étiquettes.','Lettre : n’affiche que les titres qui commencent par la lettre choisie.']]},
+  filters:{ t:'Filtres et tri', b:[
+    'Pour t’y retrouver dans un grand catalogue.',
+    ['Tri : les plus populaires, tendances, mieux notés, ou A → Z (ordre alphabétique).','Lettre : Tous, # (chiffres et symboles) ou A à Z. Ne montre que les titres qui commencent par cette lettre.','Catégorie : action, aventure, comédie, romance, sport…','Année : n’affiche que les œuvres sorties cette année-là.','Réinitialiser : retire tous les filtres.'],
+    'Pour la lettre et le tri A → Z, Kizuna charge 300 œuvres populaires à la fois. Si tu ne trouves pas ton titre, touche « Charger la suite ».']},
+  calendar:{ t:'Calendrier des sorties', b:[
+    'Les épisodes d’animés diffusés cette semaine, jour par jour, à l’heure de ton fuseau horaire.',
+    ['‹ Précédente et Suivante › : change de semaine. « Cette semaine » revient à aujourd’hui.','Populaires seulement : masque les séries peu suivies. Désactive-le pour tout voir.','Ma liste seulement : n’affiche que les œuvres de ta collection.','Touche un épisode pour ouvrir la fiche de la série.']]},
+  journal:{ t:'Journal', b:[
+    'Ton carnet de bord : chaque œuvre terminée, rangée par mois, avec la date, ta note et ta critique.',
+    ['Pour ajouter une entrée : ouvre une fiche, mets ta note, puis touche « Ajouter au journal ».','La date de l’entrée est celle choisie dans la fiche (aujourd’hui par défaut).','Une œuvre déjà dans le journal est marquée « revu » ou « relu » quand tu l’ajoutes à nouveau.','Supprimer retire seulement l’entrée du journal, pas l’œuvre de ta collection.']]},
+  lists:{ t:'Listes', b:[
+    'Regroupe tes œuvres comme tu veux : « À voir ce week-end », « Classiques », « Mangas à offrir »…',
+    ['Nouvelle liste : crée-la ici ou depuis la ligne Listes d’une fiche.','Pour ajouter une œuvre : ouvre sa fiche et touche le nom de la liste. Une œuvre peut être dans plusieurs listes.','Dans une liste : renomme-la, supprime-la, ou touche une affiche pour ouvrir sa fiche. Supprimer une liste ne supprime pas les œuvres.']]},
+  shelf:{ t:'Bibliothèque de mangas', b:[
+    'Ta collection de mangas, tome par tome.',
+    ['Ajouter un manga : cherche-le dans la barre, ou utilise « Ajouter à ma bibliothèque » dans sa fiche.','Touche une série pour déplier ses tomes.','Un appui sur un tome : possédé. Deux appuis : lu. Trois appuis : retiré.','Tomes parus : corrige le nombre si besoin, ou ajoute-les avec « + 1 tome » quand la série n’est pas terminée.','Tout possédé, Tout lu, Vider : raccourcis pour toute la série.','La barre de progression montre les tomes possédés et lus.']]},
+  fiche:{ t:'La fiche d’une œuvre', b:[
+    'Tout ce que tu fais sur une œuvre se règle ici, et s’enregistre automatiquement.',
+    ['Statut : À voir, En cours, Vu, Abandonné (À lire, Lu pour un manga).','Ta note : de ½ à 5 étoiles. Le cœur marque un coup de cœur.','Progression : épisodes vus ou chapitres lus, avec + et −.','Date et étiquettes : quand tu l’as vue, et tes mots-clés.','Critique : un texte libre, visible uniquement par toi.','Listes, Bibliothèque, Journal : range l’œuvre dans tes listes, ta bibliothèque de tomes (mangas) ou ton journal.','Retirer de ma collection : efface ta note, ta critique et ses entrées de journal.']]}
+};
+const GUIDE_ORDER = ['profil','account','favs','stats','top10','themes','settings','anime','season','film','manga','mine','filters','calendar','journal','lists','shelf','fiche'];
+function infoBody(key){
+  return INFO[key].b.map(x=>Array.isArray(x) ? h('ul',{},x.map(i=>h('li',{},i))) : h('p',{},x));
+}
+function Info(key, abs){
+  const d = INFO[key]; if(!d) return null;
+  return h('button',{type:'button',class:'ibtn'+(abs?' abs':''),'aria-label':'Comment ça marche : '+d.t,title:'Comment ça marche ?',onclick:ev=>{ ev.stopPropagation(); openInfo(key); }},'i');
+}
+function closeInfo(){ const v = $('#veil6'); if(v) v.remove(); document.body.style.overflow = ($('#veil4') || $('#veil5') || $('#veil3') || $('#veil2') || CUR) ? 'hidden' : ''; }
+function openInfo(key){
+  const guide = key==='guide';
+  const old = $('#veil6'); if(old) old.remove();
+  const v = h('div',{id:'veil6',class:'veil',onclick:ev=>{ if(ev.target.id==='veil6') closeInfo(); }},
+    h('div',{class:'sheet t10 legal',role:'dialog','aria-modal':'true','aria-label':guide ? 'Guide de Kizuna' : INFO[key].t,style:'max-width:560px'},
+      h('button',{class:'x','aria-label':'Fermer',onclick:closeInfo},'×'),
+      h('p',{class:'upd'},'Comment ça marche'),
+      h('h2',{},guide ? 'Guide de Kizuna' : INFO[key].t),
+      guide ? [h('p',{},'Toutes les sections de l’application, en un coup d’œil. Tu retrouves aussi chacune de ces explications avec l’icône « i » à côté du titre de la section.'),
+               GUIDE_ORDER.map(k=>h('div',{class:'guide-item'},h('h3',{},INFO[k].t),infoBody(k)))]
+            : infoBody(key),
+      h('div',{class:'row2',style:'margin-top:20px'},
+        !guide ? h('button',{class:'btn ghost sm',onclick:()=>openInfo('guide')},'Voir tout le guide') : null,
+        h('button',{class:'btn',onclick:closeInfo},'Compris'))));
+  document.body.append(v); document.body.style.overflow = 'hidden';
 }
 
 /* ═════════ Informations légales (France / Union européenne) ═════════ */
@@ -1682,7 +1780,7 @@ function renderLegalLinks(){
 }
 
 document.getElementById('ver').textContent = APP.version;
-document.addEventListener('keydown',ev=>{ if(ev.key==='Escape'){ if($('#veil5')) closeLegal(); else if($('#veil4')) closeAuth(); else if($('#dw')) closeDrawer(); else if($('#veil3')) closeFavs(); else if($('#veil2')) closeTop10(); else if(CUR) closeDetail(); } });
+document.addEventListener('keydown',ev=>{ if(ev.key==='Escape'){ if($('#veil6')) closeInfo(); else if($('#veil5')) closeLegal(); else if($('#veil4')) closeAuth(); else if($('#dw')) closeDrawer(); else if($('#veil3')) closeFavs(); else if($('#veil2')) closeTop10(); else if(CUR) closeDetail(); } });
 render();
 renderLegalLinks();
 handleLegalHash();
