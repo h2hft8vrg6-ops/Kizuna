@@ -325,7 +325,7 @@ footer{text-align:center;color:var(--washi-dim);font-size:12.5px;padding:0 14px 
 <script>
 'use strict';
 /* ═════════ Identité (change le nom ici) ═════════ */
-const APP = { version:'9', name:'Kizuna', kanji:'絆', tag:'Le journal de tes animés, films et mangas' };
+const APP = { version:'11', name:'Kizuna', kanji:'絆', tag:'Le journal de tes animés, films et mangas' };
 
 /* ═════════ Stockage local ═════════ */
 const KEY = 'kizuna.v1';
@@ -1310,9 +1310,10 @@ const CLOUD = { url:'https://lvrnjzixmzjkkfrknmhg.supabase.co', key:'sb_publisha
 const SESS_KEY = 'kizuna.session', CFG_KEY = 'kizuna.cloudcfg', SYNC_KEY = 'kizuna.lastsync';
 const CS = { session:null, status:'idle', msg:'', syncing:false, timer:null };
 try{ CS.session = JSON.parse(localStorage.getItem(SESS_KEY)||'null'); }catch(e){}
+const originOf = u => { try{ return new URL(String(u).trim()).origin; }catch(e){ return String(u||'').trim().replace(/\/+$/,''); } };
 function cfg(){
-  if(CLOUD.url && CLOUD.key) return { url:CLOUD.url, key:CLOUD.key, fixed:true };
-  try{ const c = JSON.parse(localStorage.getItem(CFG_KEY)||'null'); if(c && c.url && c.key) return { url:c.url, key:c.key, fixed:false }; }catch(e){}
+  if(CLOUD.url && CLOUD.key) return { url:originOf(CLOUD.url), key:CLOUD.key.trim(), fixed:true };
+  try{ const c = JSON.parse(localStorage.getItem(CFG_KEY)||'null'); if(c && c.url && c.key) return { url:originOf(c.url), key:String(c.key).trim(), fixed:false }; }catch(e){}
   return { url:'', key:'', fixed:false };
 }
 const cloudReady = () => { const c = cfg(); return !!(c.url && c.key); };
@@ -1335,7 +1336,7 @@ async function sb(path, o){
   if(o.prefer) headers.Prefer = o.prefer;
   const r = await fetch(c.url.replace(/\/+$/,'')+path,{ method:o.method||'GET', headers, body:o.body ? JSON.stringify(o.body) : undefined });
   let j = null; try{ j = await r.json(); }catch(e){}
-  if(!r.ok){ const err = new Error((j && (j.msg || j.error_description || j.message || j.error)) || ('HTTP '+r.status)); err.status = r.status; throw err; }
+  if(!r.ok){ const err = new Error((j && (j.msg || j.error_description || j.message || j.error)) || ('HTTP '+r.status)); err.status = r.status; err.path = path.split('?')[0]; throw err; }
   return j;
 }
 function frErr(e){
@@ -1349,10 +1350,11 @@ function frErr(e){
   if(m.includes('weak') || m.includes('pwned') || m.includes('compromised') || m.includes('easy to guess')) return 'Ce mot de passe est trop faible ou trop connu. Choisis-en un autre.';
   if(m.includes('at least') && m.includes('character')) return 'Mot de passe trop court (8 caractères minimum).';
   if(m.includes('signups not allowed') || m.includes('signup is disabled')) return 'Les inscriptions sont désactivées pour cette application.';
+  if(m.includes('invalid path')) return 'Le service de comptes ne reconnaît pas la requête'+(e.path?' ('+e.path+')':'')+'. Touche « Tester la connexion au service » pour diagnostiquer.';
   if(m.includes('valid email') || m.includes('invalid email') || m.includes('unable to validate email')) return 'Adresse email invalide.';
   if(m.includes('rate limit') || e.status===429) return 'Trop de tentatives. Réessaie dans quelques minutes.';
   if(e.status===401 || e.status===403) return 'Session expirée. Reconnecte-toi.';
-  return 'Erreur : '+(e.message || 'inconnue');
+  return 'Erreur : '+(e.message || 'inconnue')+(e.path ? ' ['+e.path+']' : '');
 }
 async function getToken(){
   const se = CS.session; if(!se) return null;
@@ -1456,7 +1458,7 @@ function renderAuth(){
         if(!/^https:\/\/.+/.test(url)){ AU.msg = { t:'err', text:'L’adresse doit commencer par https://' }; return renderAuth(); }
         if(!key){ AU.msg = { t:'err', text:'Colle la clé publishable.' }; return renderAuth(); }
         if(keyLooksSecret(key)){ AU.msg = { t:'err', text:'Cette clé est une clé secrète : ne la mets jamais dans l’application. Utilise la clé « publishable ».' }; return renderAuth(); }
-        try{ localStorage.setItem(CFG_KEY,JSON.stringify({ url, key })); }catch(e){}
+        try{ localStorage.setItem(CFG_KEY,JSON.stringify({ url:originOf(url), key })); }catch(e){}
         AU.msg = { t:'ok', text:'Configuration enregistrée sur cet appareil.' }; renderAuth();
       }},'Enregistrer')];
   } else if(AU.mode==='recover-set'){
@@ -1475,6 +1477,7 @@ function renderAuth(){
       up ? h('label',{class:'chk'},h('input',{type:'checkbox',id:'au-age',checked:AU.age}),h('span',{},'Je confirme avoir 15 ans ou plus, ou avoir l’accord de mon représentant légal.')) : null,
       h('button',{class:'btn',style:'width:100%',disabled:AU.busy,onclick:submitAuth},AU.busy?'Un instant…':(up?'Créer mon compte':'Me connecter')),
       !up ? h('p',{style:'margin:14px 0 0;text-align:center'},h('button',{class:'linkbtn',onclick:authRecover},'Mot de passe oublié ?')) : null,
+      h('p',{style:'margin:10px 0 0;text-align:center'},h('button',{class:'linkbtn',onclick:authTest},'Tester la connexion au service')),
       h('p',{class:'note',style:'margin-top:16px'},'Ta collection est enregistrée dans ton compte et protégée par des règles de sécurité : seul ton compte peut la lire. Kizuna fonctionne aussi sans compte.')];
     inner.unshift(h('h2',{},up?'Créer un compte':'Se connecter'));
   }
@@ -1482,6 +1485,18 @@ function renderAuth(){
     h('div',{class:'sheet t10',role:'dialog','aria-modal':'true','aria-label':'Compte Kizuna',style:'max-width:440px'},
       h('button',{class:'x','aria-label':'Fermer',onclick:closeAuth},'×'), inner));
   document.body.append(v);
+}
+async function authTest(){
+  AU.msg = { t:'ok', text:'Test en cours…' }; renderAuth();
+  const c = cfg(), base = c.url.replace(/\/+$/,'');
+  let t = 'err', txt;
+  try{
+    const r = await fetch(base+'/auth/v1/settings',{ headers:{ apikey:c.key } });
+    const raw = await r.text(); let j = null; try{ j = JSON.parse(raw); }catch(e){}
+    if(r.ok && j && typeof j==='object' && 'external' in j){ t = 'ok'; txt = 'Service joint. Inscriptions : '+(j.disable_signup ? 'fermées' : 'ouvertes')+'. Confirmation par e-mail : '+(j.mailer_autoconfirm ? 'désactivée' : 'activée')+'.'; }
+    else txt = 'Réponse inattendue du service (code '+r.status+') : '+raw.slice(0,140)+' — adresse testée : '+base;
+  }catch(e){ txt = 'Service injoignable ('+(e.message || 'réseau')+'). Adresse testée : '+base; }
+  AU.msg = { t, text:txt }; renderAuth();
 }
 async function submitAuth(){
   const up = AU.mode==='up';
