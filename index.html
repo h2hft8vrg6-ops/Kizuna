@@ -302,6 +302,12 @@ footer{text-align:center;color:var(--washi-dim);font-size:12.5px;padding:0 14px 
 .acc b{display:flex}
 .guide-item{border-top:1px solid var(--line);padding-top:4px}
 .guide-item:first-of-type{border-top:0}
+.veil.welcome{display:grid;place-items:center;background:var(--ai-900);backdrop-filter:none;z-index:45;padding:24px}
+.wc{max-width:380px;width:100%;text-align:center;display:grid;gap:12px;justify-items:center}
+.wc h1{font-size:30px;margin-top:6px}
+.wc-sub{color:var(--text2);margin:0 0 6px;line-height:1.55}
+.wc .btn{width:100%;padding:.8em 1.2em;font-size:16px}
+.hanko.lg{width:88px;height:88px;font-size:58px;border-radius:8px}
 @media (max-width:640px){
   nav{flex-wrap:wrap;overflow:visible;margin-left:0;width:100%}
   nav button{flex:1 1 21%;padding:6px 2px 7px}
@@ -325,7 +331,7 @@ footer{text-align:center;color:var(--washi-dim);font-size:12.5px;padding:0 14px 
 <script>
 'use strict';
 /* ═════════ Identité (change le nom ici) ═════════ */
-const APP = { version:'11', name:'Kizuna', kanji:'絆', tag:'Le journal de tes animés, films et mangas' };
+const APP = { version:'12', name:'Kizuna', kanji:'絆', tag:'Le journal de tes animés, films et mangas' };
 
 /* ═════════ Stockage local ═════════ */
 const KEY = 'kizuna.v1';
@@ -703,7 +709,7 @@ function renderDetail(){
           lists,
           shelfRow,
           h('div',{class:'row'},
-            h('button',{class:'btn',onclick:()=>logDiary(meta)},isManga?'Ajouter au journal de lecture':'Ajouter au journal'),
+            CUR.logged ? h('button',{class:'btn ghost',disabled:true,'aria-live':'polite'},isManga?'✓ Ajouté au journal de lecture':'✓ Ajouté au journal') : h('button',{class:'btn',onclick:()=>logDiary(meta)},isManga?'Ajouter au journal de lecture':'Ajouter au journal'),
             E(meta.key) && active(E(meta.key)) ? h('button',{class:'btn ghost',onclick:()=>{
               if(!confirm('Retirer cette œuvre de ta collection ? Ta note, ta critique et ses entrées du journal seront supprimées.')) return;
               delete DB.items[meta.key]; DB.diary = DB.diary.filter(d=>d.key!==meta.key); DB.lists.forEach(l=>{ l.keys = l.keys.filter(k=>k!==meta.key); }); save(); closeDetail(); toast('Retiré de ta collection');
@@ -722,7 +728,8 @@ function logDiary(meta){
   e.seen = date; e.status = 'done';
   const m = meta.type==='manga' ? meta.chapters : (meta.type==='anime' ? meta.episodes : null);
   if(m) e.progress = m;
-  touch(e); toast(meta.type==='manga' ? 'Ajouté à ton journal de lecture' : 'Ajouté à ton journal');
+  touch(e);
+  if(CUR) CUR.logged = true;
   renderDetail();
 }
 
@@ -1409,7 +1416,8 @@ async function signOut(){
   try{ const t = CS.session && CS.session.access_token; if(t) await sb('/auth/v1/logout',{ method:'POST', token:t }); }catch(e){}
   setSession(null); localStorage.removeItem(SYNC_KEY); localStorage.removeItem('kizuna.lastsyncAt'); CS.status = 'idle'; CS.msg = '';
   if(confirm('Tu es déconnecté.\n\nOK : effacer aussi la collection enregistrée sur cet appareil (elle reste dans ton compte).\nAnnuler : la garder sur cet appareil.')){ DB = defaults(); saveLocal(); applyTheme(); }
-  render();
+  try{ localStorage.removeItem(WELCOME_KEY); }catch(e){}
+  render(); showWelcome();
 }
 async function deleteAccount(){
   if(!confirm('Supprimer définitivement ton compte, ton adresse email et toutes tes données en ligne ? Cette action est irréversible.')) return;
@@ -1417,7 +1425,8 @@ async function deleteAccount(){
   try{ const token = await getToken(); await sb('/rest/v1/rpc/delete_my_account',{ method:'POST', token, body:{} }); }
   catch(e){ toast(frErr(e)); return; }
   setSession(null); localStorage.removeItem(SYNC_KEY); localStorage.removeItem('kizuna.lastsyncAt'); CS.status = 'idle'; CS.msg = '';
-  toast('Compte supprimé'); render();
+  toast('Compte supprimé'); try{ localStorage.removeItem(WELCOME_KEY); }catch(e){}
+  render(); showWelcome();
 }
 async function deleteCloudData(){
   if(!confirm('Supprimer la copie de ta collection stockée en ligne ? Ta collection sur cet appareil reste intacte.')) return;
@@ -1518,7 +1527,7 @@ async function submitAuth(){
       const j = await sb('/auth/v1/token?grant_type=password',{ method:'POST', body:{ email, password:pw } });
       setSession(toSession(j));
     }
-    AU.busy = false; closeAuth(); toast(up ? 'Compte créé, bienvenue !' : 'Connecté'); refreshAccountViews(); await cloudSync();
+    AU.busy = false; closeAuth(); closeWelcome(); toast(up ? 'Compte créé, bienvenue !' : 'Connecté'); refreshAccountViews(); await cloudSync();
   }catch(e){ AU.busy = false; AU.msg = { t:'err', text:frErr(e) }; renderAuth(); }
 }
 async function authRecover(){
@@ -1547,7 +1556,7 @@ async function handleAuthHash(){
     const u = await sb('/auth/v1/user',{ token:at });
     setSession({ access_token:at, refresh_token:p.get('refresh_token'), expires_at:Math.floor(Date.now()/1000) + (+p.get('expires_in') || 3600), user:{ id:u.id, email:u.email } });
     if(p.get('type')==='recovery'){ AU.mode = 'recover-set'; AU.msg = null; renderAuth(); document.body.style.overflow = 'hidden'; }
-    else { toast('Email confirmé, tu es connecté'); refreshAccountViews(); cloudSync(); }
+    else { closeWelcome(); toast('Email confirmé, tu es connecté'); refreshAccountViews(); cloudSync(); }
   }catch(e){ toast(frErr(e)); }
 }
 
@@ -1558,7 +1567,7 @@ const INFO = {
     'C’est ta page d’accueil : ton identité dans Kizuna.',
     ['Pseudo et bio : écris directement dans les champs, tout s’enregistre tout seul.','Avatar : choisis un kanji, puis une couleur.','Le menu ☰ en haut à droite te mène à toutes les autres sections.']]},
   account:{ t:'Sauvegarde en ligne', b:[
-    'Facultatif. Sans compte, ta collection reste uniquement sur cet appareil. Avec un compte (email et mot de passe), elle est copiée dans ton compte et tu la retrouves sur tous tes appareils.',
+    'Facultatif. Kizuna te propose de créer un compte à l’ouverture ; tu peux aussi continuer sans compte. Sans compte, ta collection reste uniquement sur cet appareil. Avec un compte (email et mot de passe), elle est copiée dans ton compte et tu la retrouves sur tous tes appareils.',
     ['Se connecter ou Créer un compte : ouvre le formulaire. Pour créer un compte, il faut accepter les conditions et confirmer avoir 15 ans ou plus.','Synchroniser : envoie et récupère tes données tout de suite. La synchronisation se fait aussi toute seule, quelques secondes après chaque modification.','Se déconnecter : ferme ta session. Tu choisis ensuite de garder ou d’effacer la copie présente sur l’appareil.'],
     'La suppression de tes données en ligne ou de ton compte se trouve plus bas, dans « Réglages et sauvegarde ».']},
   favs:{ t:'Mes favoris', b:[
@@ -1635,6 +1644,27 @@ function openInfo(key){
       h('div',{class:'row2',style:'margin-top:20px'},
         !guide ? h('button',{class:'btn ghost sm',onclick:()=>openInfo('guide')},'Voir tout le guide') : null,
         h('button',{class:'btn',onclick:closeInfo},'Compris'))));
+  document.body.append(v); document.body.style.overflow = 'hidden';
+}
+
+/* ═════════ Écran d’accueil (premier lancement) ═════════ */
+const WELCOME_KEY = 'kizuna.welcomed';
+function closeWelcome(){
+  const v = $('#veil7'); if(v) v.remove();
+  document.body.style.overflow = ($('#veil4') || $('#veil5') || $('#veil6') || CUR) ? 'hidden' : '';
+}
+function showWelcome(){
+  if($('#veil7')) return;
+  const links = [['mentions-legales','Mentions légales'],['confidentialite','Confidentialité'],['cgu','Conditions d’utilisation']];
+  const v = h('div',{id:'veil7',class:'veil welcome',role:'dialog','aria-modal':'true','aria-label':'Bienvenue sur Kizuna'},
+    h('div',{class:'wc'},
+      h('div',{class:'hanko lg','aria-hidden':'true'},APP.kanji),
+      h('h1',{},'Bienvenue sur Kizuna'),
+      h('p',{class:'wc-sub'},'Ton journal d’animés, de films et de mangas. Crée un compte pour retrouver ta collection sur tous tes appareils.'),
+      h('button',{class:'btn',onclick:()=>openAuth('up')},'Créer un compte'),
+      h('button',{class:'btn ghost',onclick:()=>openAuth('in')},'Se connecter'),
+      h('button',{class:'linkbtn',style:'margin-top:4px',onclick:()=>{ try{ localStorage.setItem(WELCOME_KEY,'1'); }catch(e){} closeWelcome(); }},'Continuer sans compte'),
+      h('div',{class:'flinks',style:'margin-top:10px'},links.map(([n,l])=>h('button',{class:'linkbtn',onclick:()=>openLegal(n)},l)))));
   document.body.append(v); document.body.style.overflow = 'hidden';
 }
 
@@ -1798,6 +1828,7 @@ document.getElementById('ver').textContent = APP.version;
 document.addEventListener('keydown',ev=>{ if(ev.key==='Escape'){ if($('#veil6')) closeInfo(); else if($('#veil5')) closeLegal(); else if($('#veil4')) closeAuth(); else if($('#dw')) closeDrawer(); else if($('#veil3')) closeFavs(); else if($('#veil2')) closeTop10(); else if(CUR) closeDetail(); } });
 render();
 renderLegalLinks();
+if(!CS.session && !localStorage.getItem(WELCOME_KEY) && !LEGAL_TITLES[location.hash.slice(1)] && !/access_token|error_description/.test(location.hash)) showWelcome();
 handleLegalHash();
 window.addEventListener('hashchange',handleLegalHash);
 handleAuthHash();
