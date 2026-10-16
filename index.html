@@ -8,7 +8,9 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Kizuna">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%23c8402f'/%3E%3Ctext x='50' y='66' font-size='70' font-weight='900' text-anchor='middle' fill='%23fbeee6' font-family='serif'%3E絆%3C/text%3E%3C/svg%3E">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%23c8402f'/%3E%3Ctext x='50' y='66' font-size='70' font-weight='900' text-anchor='middle' fill='%23fbeee6' font-family='serif'%3E絆%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <title>Kizuna 絆 — le journal des animés, films et mangas</title>
 <style>
 :root{
@@ -308,6 +310,11 @@ footer{text-align:center;color:var(--washi-dim);font-size:12.5px;padding:0 14px 
 .wc-sub{color:var(--text2);margin:0 0 6px;line-height:1.55}
 .wc .btn{width:100%;padding:.8em 1.2em;font-size:16px}
 .hanko.lg{width:88px;height:88px;font-size:58px;border-radius:8px}
+.agd{margin-bottom:18px;padding:14px 18px;border:1px solid var(--line);border-radius:8px;background:var(--ai-800)}
+.agd h3{font-size:18px;margin:0 0 8px;display:flex;align-items:center}
+.agd .air{grid-template-columns:96px 1fr;border-bottom:1px solid var(--line);padding:8px 0}
+.agd .air .tm{font-size:14px;line-height:1.25}
+.agd .row2{justify-content:flex-start;margin-top:12px}
 @media (max-width:640px){
   nav{flex-wrap:wrap;overflow:visible;margin-left:0;width:100%}
   nav button{flex:1 1 21%;padding:6px 2px 7px}
@@ -331,7 +338,7 @@ footer{text-align:center;color:var(--washi-dim);font-size:12.5px;padding:0 14px 
 <script>
 'use strict';
 /* ═════════ Identité (change le nom ici) ═════════ */
-const APP = { version:'12', name:'Kizuna', kanji:'絆', tag:'Le journal de tes animés, films et mangas' };
+const APP = { version:'14', name:'Kizuna', kanji:'絆', tag:'Le journal de tes animés, films et mangas' };
 
 /* ═════════ Stockage local ═════════ */
 const KEY = 'kizuna.v1';
@@ -528,7 +535,7 @@ function mergeSources(base, jk, tm){
 /* ═════════ État de l'interface ═════════ */
 const S = { view:'profile', sub:'explore', q:'', results:[], page:1, more:false, loading:false, src:{}, token:0,
             filter:{ status:'all', sort:'recent', text:'' }, openList:null,
-            season:curSeason(), sort:'POPULARITY_DESC', letter:'', genre:'', year:0, shelf:{ q:'', res:[], loading:false, err:false, open:{}, tok:0, dt:null }, cal:{ off:0, data:{}, loading:false, err:false, pop:true, mine:false } };
+            season:curSeason(), sort:'POPULARITY_DESC', letter:'', genre:'', year:0, shelf:{ q:'', res:[], loading:false, err:false, open:{}, tok:0, dt:null }, agenda:{ at:0, sig:'', list:[], loading:false, err:false }, cal:{ off:0, data:{}, loading:false, err:false, pop:true, mine:false } };
 const SEASONS = ['WINTER','SPRING','SUMMER','FALL'];
 const SEASON_FR = { WINTER:'Hiver', SPRING:'Printemps', SUMMER:'Été', FALL:'Automne' };
 function curSeason(){ const d = new Date(); return { s:['WINTER','SPRING','SUMMER','FALL'][Math.floor(d.getMonth()/3)], y:d.getFullYear() }; }
@@ -709,7 +716,7 @@ function renderDetail(){
           lists,
           shelfRow,
           h('div',{class:'row'},
-            CUR.logged ? h('button',{class:'btn ghost',disabled:true,'aria-live':'polite'},isManga?'✓ Ajouté au journal de lecture':'✓ Ajouté au journal') : h('button',{class:'btn',onclick:()=>logDiary(meta)},isManga?'Ajouter au journal de lecture':'Ajouter au journal'),
+            h('button',{class:'btn',onclick:()=>logDiary(meta)},isManga?'Ajouter au journal de lecture':'Ajouter au journal'),
             E(meta.key) && active(E(meta.key)) ? h('button',{class:'btn ghost',onclick:()=>{
               if(!confirm('Retirer cette œuvre de ta collection ? Ta note, ta critique et ses entrées du journal seront supprimées.')) return;
               delete DB.items[meta.key]; DB.diary = DB.diary.filter(d=>d.key!==meta.key); DB.lists.forEach(l=>{ l.keys = l.keys.filter(k=>k!==meta.key); }); save(); closeDetail(); toast('Retiré de ta collection');
@@ -729,8 +736,7 @@ function logDiary(meta){
   const m = meta.type==='manga' ? meta.chapters : (meta.type==='anime' ? meta.episodes : null);
   if(m) e.progress = m;
   touch(e);
-  if(CUR) CUR.logged = true;
-  renderDetail();
+  closeDetail();
 }
 
 /* ═════════ Vues ═════════ */
@@ -911,6 +917,7 @@ function viewLists(c){
 
 function viewProfile(c){
   c.append(accountCard());
+  c.append(agendaCard()); agendaLoad();
   const P = DB.profile, favs = P.favs.map(metaOf).filter(Boolean);
   c.append(h('div',{class:'pcard'}, Info('profil',true), avatarEl(88),
     h('div',{class:'pinfo'},
@@ -1161,6 +1168,86 @@ function viewShelf(c){
   items.forEach(sh=>c.append(ShelfPanel(sh)));
 }
 
+/* ═════════ Ma liste cette semaine + export agenda (.ics) ═════════ */
+function icsEscape(t){ return String(t).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n'); }
+function icsFold(line){
+  const enc = new TextEncoder(); const out = []; let cur = '', len = 0;
+  for(const ch of line){ const n = enc.encode(ch).length; if(len + n > 74){ out.push(cur); cur = ' '+ch; len = 1+n; } else { cur += ch; len += n; } }
+  out.push(cur); return out.join('\r\n');
+}
+const icsDate = ts => new Date(ts*1000).toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+function makeICS(entries){
+  const L = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Kizuna//Sorties//FR','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:Kizuna · sorties'];
+  const stamp = icsDate(Math.floor(Date.now()/1000));
+  entries.forEach(en=>{
+    const nom = en.title+' — épisode '+en.ep;
+    L.push('BEGIN:VEVENT','UID:kizuna-'+String(en.key).replace(/[^A-Za-z0-9_-]/g,'')+'-'+en.ep+'@kizuna','DTSTAMP:'+stamp,'DTSTART:'+icsDate(en.at),'DTEND:'+icsDate(en.at+1800),
+      'SUMMARY:'+icsEscape(nom),'DESCRIPTION:'+icsEscape('Horaire de diffusion au Japon : vérifie la disponibilité en France. Créé avec Kizuna.'),
+      'BEGIN:VALARM','TRIGGER:-PT15M','ACTION:DISPLAY','DESCRIPTION:'+icsEscape(nom),'END:VALARM','END:VEVENT');
+  });
+  L.push('END:VCALENDAR');
+  return L.map(icsFold).join('\r\n')+'\r\n';
+}
+function saveBlob(blob,name){ const a = h('a',{href:URL.createObjectURL(blob),download:name}); document.body.append(a); a.click(); a.remove(); toast('Fichier agenda enregistré'); }
+function downloadICS(entries,name){
+  if(!entries.length){ toast('Aucune sortie à ajouter'); return; }
+  const blob = new Blob([makeICS(entries)],{type:'text/calendar;charset=utf-8'});
+  const file = new File([blob],name,{type:'text/calendar'});
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    navigator.share({ files:[file], title:'Sorties Kizuna' }).catch(e=>{ if(!e || e.name!=='AbortError') saveBlob(blob,name); });
+    return;
+  }
+  saveBlob(blob,name);
+}
+function dayWord(ts){
+  const d = new Date(ts*1000), t = new Date(); t.setHours(0,0,0,0);
+  const diff = Math.round((new Date(d.getFullYear(),d.getMonth(),d.getDate()) - t)/86400000);
+  return diff===0 ? 'Aujourd’hui' : diff===1 ? 'Demain' : d.toLocaleDateString('fr-FR',{weekday:'long'}).replace(/^./,c=>c.toUpperCase());
+}
+const agendaIds = () => Object.values(DB.items).filter(e=>/^al:\d+$/.test(e.meta.key) && (e.status==='planned' || e.status==='current')).map(e=>+e.meta.key.slice(3));
+function updateAgendaUI(){ const a = $('#agenda'); if(a) a.replaceWith(agendaCard()); }
+async function agendaLoad(force){
+  const A = S.agenda, ids = agendaIds(), sig = ids.join(',');
+  if(!ids.length){ A.list = []; A.sig = ''; return; }
+  if(A.loading) return;
+  if(!force && A.sig===sig && Date.now() - A.at < 30*60*1000) return;
+  A.loading = true; A.err = false; updateAgendaUI();
+  try{
+    const now = Math.floor(Date.now()/1000), out = [];
+    for(let page=1; page<=3; page++){
+      const data = await alPost('query($ids:[Int],$f:Int,$t:Int,$p:Int){Page(page:$p,perPage:50){pageInfo{hasNextPage} airingSchedules(mediaId_in:$ids,airingAt_greater:$f,airingAt_lesser:$t,sort:TIME){airingAt episode mediaId}}}',{ ids, f:now, t:now+7*86400, p:page });
+      data.Page.airingSchedules.forEach(a=>out.push({ at:a.airingAt, ep:a.episode, key:'al:'+a.mediaId }));
+      if(!data.Page.pageInfo.hasNextPage) break;
+    }
+    A.list = out; A.at = Date.now(); A.sig = sig;
+  }catch(e){ A.err = true; }
+  A.loading = false; updateAgendaUI();
+}
+function agendaCard(){
+  const A = S.agenda, ids = agendaIds();
+  const box = h('div',{id:'agenda',class:'agd'}, h('h3',{},'Dans ta liste cette semaine',Info('agenda')));
+  if(!ids.length){
+    box.append(h('p',{class:'note',style:'margin:0 0 12px'},'Range des animés dans « À voir » ou « En cours » : leurs prochains épisodes apparaîtront ici.'),
+      h('button',{class:'btn ghost sm',onclick:()=>go('anime')},'Explorer les animés'));
+    return box;
+  }
+  if(A.loading){ box.append(h('p',{class:'note',style:'margin:0'},h('i',{class:'spin'}),'Recherche des prochains épisodes…')); return box; }
+  if(A.err){ box.append(h('p',{class:'note',style:'margin:0 0 12px'},'Impossible de charger le calendrier pour le moment.'), h('button',{class:'btn ghost sm',onclick:()=>agendaLoad(true)},'Réessayer')); return box; }
+  const rows = (A.list||[]).filter(a=>E(a.key));
+  if(!rows.length){ box.append(h('p',{class:'note',style:'margin:0'},'Aucune sortie prévue ces 7 prochains jours pour les animés de ta liste.')); return box; }
+  rows.slice(0,6).forEach(a=>{
+    const m = E(a.key).meta;
+    box.append(h('button',{class:'air',onclick:()=>openDetail(m)},
+      h('span',{class:'tm'},dayWord(a.at)+' '+new Date(a.at*1000).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})),
+      h('div',{},h('h4',{},m.title),h('small',{},'Épisode '+a.ep))));
+  });
+  if(rows.length>6) box.append(h('p',{class:'note',style:'margin:8px 0 0'},'… et '+(rows.length-6)+' autre'+(rows.length-6>1?'s':'')+' cette semaine.'));
+  box.append(h('div',{class:'row2'},
+    h('button',{class:'btn ghost sm',onclick:()=>{ S.cal.mine = true; go('calendar'); }},'Voir le calendrier'),
+    h('button',{class:'btn ghost sm',onclick:()=>downloadICS(rows.map(a=>({ at:a.at, ep:a.ep, key:a.key, title:E(a.key).meta.title })),'kizuna-ma-liste.ics')},'Ajouter à mon agenda')));
+  return box;
+}
+
 /* ═════════ Calendrier des sorties ═════════ */
 function weekStart(off){ const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - ((d.getDay()+6)%7) + off*7); return d; }
 async function loadCalendar(){
@@ -1174,6 +1261,13 @@ async function loadCalendar(){
   S.cal.loading = false; S.cal.err = !ok;
   if(S.view==='calendar') renderContent();
 }
+function calVisible(){
+  return (S.cal.data[S.cal.off]||[]).filter(a=>{
+    if(S.cal.pop && a.pop < 5000) return false;
+    if(S.cal.mine){ const e = E(a.meta.key); if(!(e && active(e))) return false; }
+    return true;
+  });
+}
 function viewCalendar(c){
   const off = S.cal.off, ws = weekStart(off), we = new Date(ws); we.setDate(we.getDate()+6);
   const f = d => d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
@@ -1186,14 +1280,11 @@ function viewCalendar(c){
     off!==0 ? h('button',{class:'btn ghost sm',onclick:()=>{ S.cal.off = 0; loadCalendar(); }},'Cette semaine') : null));
   c.append(h('div',{class:'wk'},
     h('button',{class:'chip'+(S.cal.pop?' on':''),'aria-pressed':String(S.cal.pop),onclick:()=>{ S.cal.pop = !S.cal.pop; renderContent(); }},'Populaires seulement'),
-    h('button',{class:'chip'+(S.cal.mine?' on':''),'aria-pressed':String(S.cal.mine),onclick:()=>{ S.cal.mine = !S.cal.mine; renderContent(); }},'Ma liste seulement')));
+    h('button',{class:'chip'+(S.cal.mine?' on':''),'aria-pressed':String(S.cal.mine),onclick:()=>{ S.cal.mine = !S.cal.mine; renderContent(); }},'Ma liste seulement'),
+    h('button',{class:'btn ghost sm',onclick:()=>downloadICS(calVisible().slice(0,150).map(a=>({ at:a.at, ep:a.ep, key:a.meta.key, title:a.meta.title })),'kizuna-semaine.ics')},'Ajouter à mon agenda')));
   if(S.cal.loading){ c.append(h('div',{class:'sources'},h('span',{},h('i',{class:'spin'}),'Chargement du calendrier…'))); return; }
   if(S.cal.err){ c.append(Empty('空','Calendrier indisponible','AniList ne répond pas pour le moment. Vérifie ta connexion et réessaie.',h('button',{class:'btn',onclick:loadCalendar},'Réessayer'))); return; }
-  const data = (S.cal.data[off]||[]).filter(a=>{
-    if(S.cal.pop && a.pop < 5000) return false;
-    if(S.cal.mine){ const e = E(a.meta.key); if(!(e && active(e))) return false; }
-    return true;
-  });
+  const data = calVisible();
   const todayKey = new Date().toDateString();
   for(let i=0;i<7;i++){
     const d = new Date(ws); d.setDate(d.getDate()+i);
@@ -1357,6 +1448,7 @@ function frErr(e){
   if(m.includes('weak') || m.includes('pwned') || m.includes('compromised') || m.includes('easy to guess')) return 'Ce mot de passe est trop faible ou trop connu. Choisis-en un autre.';
   if(m.includes('at least') && m.includes('character')) return 'Mot de passe trop court (8 caractères minimum).';
   if(m.includes('signups not allowed') || m.includes('signup is disabled')) return 'Les inscriptions sont désactivées pour cette application.';
+  if(m.includes('kizuna_data_size') || m.includes('violates check constraint')) return 'Ta collection est trop volumineuse pour la sauvegarde en ligne (limite : 5 Mo). Exporte-la ou retire des éléments.';
   if(m.includes('invalid path')) return 'Le service de comptes ne reconnaît pas la requête'+(e.path?' ('+e.path+')':'')+'. Touche « Tester la connexion au service » pour diagnostiquer.';
   if(m.includes('valid email') || m.includes('invalid email') || m.includes('unable to validate email')) return 'Adresse email invalide.';
   if(m.includes('rate limit') || e.status===429) return 'Trop de tentatives. Réessaie dans quelques minutes.';
@@ -1605,9 +1697,13 @@ const INFO = {
     'Pour t’y retrouver dans un grand catalogue.',
     ['Tri : les plus populaires, tendances, mieux notés, ou A → Z (ordre alphabétique).','Lettre : Tous, # (chiffres et symboles) ou A à Z. Ne montre que les titres qui commencent par cette lettre.','Catégorie : action, aventure, comédie, romance, sport…','Année : n’affiche que les œuvres sorties cette année-là.','Réinitialiser : retire tous les filtres.'],
     'Pour la lettre et le tri A → Z, Kizuna charge 300 œuvres populaires à la fois. Si tu ne trouves pas ton titre, touche « Charger la suite ».']},
+  agenda:{ t:'Dans ta liste cette semaine', b:[
+    'Les prochains épisodes des animés que tu as rangés dans « À voir » ou « En cours », sur les 7 prochains jours.',
+    ['Touche un épisode pour ouvrir la fiche de la série.','Voir le calendrier : ouvre le calendrier complet, filtré sur ta liste.','Ajouter à mon agenda : crée un fichier que ton téléphone ajoute à son agenda, avec un rappel 15 minutes avant chaque épisode.'],
+    'Les horaires sont ceux de la diffusion au Japon : vérifie la disponibilité en France.']},
   calendar:{ t:'Calendrier des sorties', b:[
     'Les épisodes d’animés diffusés cette semaine, jour par jour, à l’heure de ton fuseau horaire.',
-    ['‹ Précédente et Suivante › : change de semaine. « Cette semaine » revient à aujourd’hui.','Populaires seulement : masque les séries peu suivies. Désactive-le pour tout voir.','Ma liste seulement : n’affiche que les œuvres de ta collection.','Touche un épisode pour ouvrir la fiche de la série.']]},
+    ['‹ Précédente et Suivante › : change de semaine. « Cette semaine » revient à aujourd’hui.','Populaires seulement : masque les séries peu suivies. Désactive-le pour tout voir.','Ma liste seulement : n’affiche que les œuvres de ta collection.','Ajouter à mon agenda : exporte les sorties affichées vers l’agenda de ton téléphone (rappel 15 minutes avant).','Touche un épisode pour ouvrir la fiche de la série.']]},
   journal:{ t:'Journal', b:[
     'Ton carnet de bord : chaque œuvre terminée, rangée par mois, avec la date, ta note et ta critique.',
     ['Pour ajouter une entrée : ouvre une fiche, mets ta note, puis touche « Ajouter au journal ».','La date de l’entrée est celle choisie dans la fiche (aujourd’hui par défaut).','Une œuvre déjà dans le journal est marquée « revu » ou « relu » quand tu l’ajoutes à nouveau.','Supprimer retire seulement l’entrée du journal, pas l’œuvre de ta collection.']]},
@@ -1621,7 +1717,7 @@ const INFO = {
     'Tout ce que tu fais sur une œuvre se règle ici, et s’enregistre automatiquement.',
     ['Statut : À voir, En cours, Vu, Abandonné (À lire, Lu pour un manga).','Ta note : de ½ à 5 étoiles. Le cœur marque un coup de cœur.','Progression : épisodes vus ou chapitres lus, avec + et −.','Date et étiquettes : quand tu l’as vue, et tes mots-clés.','Critique : un texte libre, visible uniquement par toi.','Listes, Bibliothèque, Journal : range l’œuvre dans tes listes, ta bibliothèque de tomes (mangas) ou ton journal.','Retirer de ma collection : efface ta note, ta critique et ses entrées de journal.']]}
 };
-const GUIDE_ORDER = ['profil','account','favs','stats','top10','themes','settings','anime','season','film','manga','mine','filters','calendar','journal','lists','shelf','fiche'];
+const GUIDE_ORDER = ['profil','account','agenda','favs','stats','top10','themes','settings','anime','season','film','manga','mine','filters','calendar','journal','lists','shelf','fiche'];
 function infoBody(key){
   return INFO[key].b.map(x=>Array.isArray(x) ? h('ul',{},x.map(i=>h('li',{},i))) : h('p',{},x));
 }
@@ -1671,7 +1767,7 @@ function showWelcome(){
 /* ═════════ Informations légales (France / Union européenne) ═════════ */
 /* À COMPLÉTER par l’éditeur avant la mise en ligne publique */
 const LEGAL = {
-  version:'1.0', date:'15 octobre 2026',
+  version:'1.1', date:'16 octobre 2026',
   anonymous:false,      /* true : l’éditeur reste anonyme (identité communiquée aux hébergeurs uniquement) */
   editorName:'Kairo Hikari',        /* prénom et nom de l’éditeur (personne physique) */
   contactEmail:'Hikari.kairo@proton.me',      /* adresse de contact pour les demandes (droits RGPD, signalements) */
@@ -1717,7 +1813,8 @@ function legalDoc(name){
       [h('b',{},'Compte. '),'Adresse email, mot de passe (conservé uniquement sous forme hachée par le prestataire d’authentification, jamais en clair), identifiant technique, version des conditions acceptées, date d’acceptation et confirmation de l’âge. Finalité : créer et gérer ton compte. Base légale : exécution du contrat (conditions d’utilisation), art. 6.1.b du RGPD.'],
       [h('b',{},'Sauvegarde en ligne. '),'Si tu te connectes : ta collection, tes notes, critiques, listes, journal, bibliothèque, pseudo, bio, avatar, favoris et thème (jamais ta clé TMDB). Finalité : les retrouver sur tous tes appareils. Base légale : exécution du contrat.'],
       [h('b',{},'Sécurité. '),'Journaux techniques (adresse IP, dates de connexion, erreurs) tenus par les prestataires pour protéger le service contre les abus. Base légale : intérêt légitime, art. 6.1.f.'],
-      [h('b',{},'Recherche d’œuvres. '),'Les termes que tu cherches et ton adresse IP sont transmis à AniList et à MyAnimeList (via Jikan) pour obtenir les résultats, et à TMDB si tu actives cette option avec ta propre clé. Aucun identifiant de compte n’est transmis à ces services. Base légale : exécution du contrat.']
+      [h('b',{},'Recherche d’œuvres. '),'Les termes que tu cherches et ton adresse IP sont transmis à AniList et à MyAnimeList (via Jikan) pour obtenir les résultats, et à TMDB si tu actives cette option avec ta propre clé. Aucun identifiant de compte n’est transmis à ces services. Base légale : exécution du contrat.'],
+      [h('b',{},'Prochains épisodes de ta liste. '),'Sur ton profil, Kizuna demande à AniList les prochaines sorties des animés que tu as rangés dans « À voir » ou « En cours » : les identifiants de ces séries et ton adresse IP lui sont transmis. Aucun identifiant de compte n’est transmis. Base légale : exécution du contrat.']
     ]),
     LP('Tes critiques sont libres : évite d’y écrire des informations sensibles te concernant ou concernant d’autres personnes (santé, opinions politiques ou religieuses, orientation sexuelle…).'),
     LH('3. Ce que Kizuna ne fait pas'),
@@ -1734,6 +1831,7 @@ function legalDoc(name){
     LU([
       ['Sans compte : jusqu’à ce que tu effaces les données de ton navigateur ou utilises « Tout effacer ».'],
       ['Avec compte : tant que ton compte existe. Quand tu supprimes ton compte (Profil, Réglages), ton email et toutes tes données en ligne sont supprimés de la base de données.'],
+      ['Sauvegardes : le cas échéant, des sauvegardes chiffrées de la base sont conservées au plus 30 jours, puis supprimées.'],
       ['Journaux techniques : conservés par les prestataires pendant une durée limitée, selon leurs propres règles.']
     ]),
     LH('7. Tes droits'),
@@ -1825,6 +1923,7 @@ function renderLegalLinks(){
 }
 
 document.getElementById('ver').textContent = APP.version;
+if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){ window.addEventListener('load',()=>{ navigator.serviceWorker.register('./sw.js').catch(()=>{}); }); }
 document.addEventListener('keydown',ev=>{ if(ev.key==='Escape'){ if($('#veil6')) closeInfo(); else if($('#veil5')) closeLegal(); else if($('#veil4')) closeAuth(); else if($('#dw')) closeDrawer(); else if($('#veil3')) closeFavs(); else if($('#veil2')) closeTop10(); else if(CUR) closeDetail(); } });
 render();
 renderLegalLinks();
